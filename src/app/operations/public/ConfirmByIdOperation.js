@@ -1,26 +1,10 @@
-class ConfirmByTokenOperation {
-  constructor({ appointmentRepository, tokenService }) {
+class ConfirmByIdOperation {
+  constructor({ appointmentRepository }) {
     this.appointmentRepository = appointmentRepository;
-    this.tokenService = tokenService;
   }
 
-  async execute(token) {
-    let payload;
-    try {
-      payload = this.tokenService.verify(token);
-    } catch {
-      const error = new Error('Link inválido ou expirado');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (payload.action !== 'confirm') {
-      const error = new Error('Link inválido');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const appointment = await this.appointmentRepository.findById(payload.appointment_id);
+  async execute(appointment_id) {
+    const appointment = await this.appointmentRepository.findById(appointment_id);
     if (!appointment) {
       const error = new Error('Consulta não encontrada');
       error.statusCode = 404;
@@ -42,7 +26,7 @@ class ConfirmByTokenOperation {
       };
     }
 
-    await this.appointmentRepository.update(payload.appointment_id, { status: 'confirmado' });
+    await this.appointmentRepository.update(appointment_id, { status: 'confirmado' });
 
     return {
       alreadyConfirmed: false,
@@ -53,4 +37,4 @@ class ConfirmByTokenOperation {
   }
 }
 
-module.exports = ConfirmByTokenOperation;
+module.exports = ConfirmByIdOperation;

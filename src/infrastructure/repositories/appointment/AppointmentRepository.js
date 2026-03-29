@@ -21,6 +21,10 @@ class AppointmentRepository {
     return Appointment.findOneAndUpdate({ appointment_id }, data, { new: true });
   }
 
+  async findByReviewLinkId(reviewLinkId) {
+    return Appointment.findOne({ activeReviewLinkId: reviewLinkId });
+  }
+
   async findByDoctorAndDateRange(doctor_id, from, to) {
     const filter = { doctor_id };
     if (from) filter.date = { ...filter.date, $gte: from };

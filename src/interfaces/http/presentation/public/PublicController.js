@@ -1,20 +1,20 @@
 class PublicController {
   constructor({
-    confirmByTokenOperation,
+    confirmByIdOperation,
     getPublicSlotsOperation,
     rescheduleByTokenOperation,
-    getAppointmentByTokenOperation,
-    createReviewOperation,
+    getReviewInfoByLinkOperation,
+    submitReviewByLinkOperation,
   }) {
-    this.confirmByTokenOperation = confirmByTokenOperation;
+    this.confirmByIdOperation = confirmByIdOperation;
     this.getPublicSlotsOperation = getPublicSlotsOperation;
     this.rescheduleByTokenOperation = rescheduleByTokenOperation;
-    this.getAppointmentByTokenOperation = getAppointmentByTokenOperation;
-    this.createReviewOperation = createReviewOperation;
+    this.getReviewInfoByLinkOperation = getReviewInfoByLinkOperation;
+    this.submitReviewByLinkOperation = submitReviewByLinkOperation;
   }
 
   async confirm(req, res) {
-    const result = await this.confirmByTokenOperation.execute(req.params.token);
+    const result = await this.confirmByIdOperation.execute(req.params.appointmentId);
     res.status(200).json(result);
   }
 
@@ -29,18 +29,12 @@ class PublicController {
   }
 
   async reviewInfo(req, res) {
-    const result = await this.getAppointmentByTokenOperation.execute(req.params.token);
+    const result = await this.getReviewInfoByLinkOperation.execute(req.params.linkId);
     res.status(200).json(result);
   }
 
   async submitReview(req, res) {
-    const info = await this.getAppointmentByTokenOperation.execute(req.params.token);
-    const result = await this.createReviewOperation.execute({
-      appointmentId: info.appointmentId,
-      patientName: req.body.patientName,
-      rating: req.body.rating,
-      comment: req.body.comment,
-    });
+    const result = await this.submitReviewByLinkOperation.execute(req.params.linkId, req.body);
     res.status(201).json(result);
   }
 }

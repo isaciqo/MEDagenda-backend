@@ -9,6 +9,10 @@ class ReviewRepository {
     return Review.findOne({ appointment_id });
   }
 
+  async findByLinkId(reviewLinkId) {
+    return Review.findOne({ reviewLinkId });
+  }
+
   async create(data) {
     const review = new Review(data);
     return review.save();

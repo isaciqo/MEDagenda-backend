@@ -25,6 +25,7 @@ const appointmentSchema = new mongoose.Schema({
     default: 'agendado',
   },
   notes: { type: String, default: '' },
+  activeReviewLinkId: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

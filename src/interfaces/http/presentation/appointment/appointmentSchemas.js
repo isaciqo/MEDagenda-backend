@@ -2,8 +2,9 @@ const Joi = require('joi');
 
 module.exports = () => ({
   create: Joi.object({
+    patientId: Joi.string().optional(),
     patientName: Joi.string().required(),
-    patientPhone: Joi.string().required(),
+    patientPhone: Joi.string().optional().allow(''),
     type: Joi.string().valid('presencial', 'online').required(),
     date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
     time: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),

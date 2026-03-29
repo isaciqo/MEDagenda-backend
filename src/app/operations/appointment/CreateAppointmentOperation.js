@@ -1,18 +1,21 @@
 const { v4: uuidv4 } = require('uuid');
 
 class CreateAppointmentOperation {
-  constructor({ appointmentRepository }) {
+  constructor({ appointmentRepository, patientRepository }) {
     this.appointmentRepository = appointmentRepository;
+    this.patientRepository = patientRepository;
   }
 
-  async execute({ doctor_id, patientName, patientPhone, type, date, time, estimatedValue, notes }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes }) {
+    const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
+
     const appointment = await this.appointmentRepository.create({
       appointment_id: uuidv4(),
       doctor_id,
       patient: {
-        id: uuidv4(),
-        name: patientName,
-        phone: patientPhone,
+        id: patient.patient_id,
+        name: patient.displayName,
+        phone: patient.phone,
       },
       type,
       date,
@@ -23,6 +26,32 @@ class CreateAppointmentOperation {
     });
 
     return this._format(appointment);
+  }
+
+  async _resolvePatient({ doctor_id, patientId, patientName, patientPhone }) {
+    // 1. Se veio patientId (autocomplete selecionado), busca direto
+    if (patientId) {
+      const found = await this.patientRepository.findById(patientId);
+      if (found) return found;
+    }
+
+    // 2. Tenta encontrar pelo telefone
+    if (patientPhone) {
+      const byPhone = await this.patientRepository.findByPhone(doctor_id, patientPhone);
+      if (byPhone) return byPhone;
+    }
+
+    // 3. Cria novo paciente automaticamente
+    const sameNameCount = await this.patientRepository.countByName(doctor_id, patientName);
+    const displayName = sameNameCount === 0 ? patientName : `${patientName} (paciente ${sameNameCount + 1})`;
+
+    return await this.patientRepository.create({
+      patient_id: uuidv4(),
+      doctor_id,
+      name: patientName,
+      phone: patientPhone || '',
+      displayName,
+    });
   }
 
   _format(a) {

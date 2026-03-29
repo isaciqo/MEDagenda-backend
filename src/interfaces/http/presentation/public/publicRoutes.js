@@ -14,17 +14,17 @@ const reviewSchema = Joi.object({
 module.exports = [
   {
     method: 'post',
-    path: '/public/confirm/:token',
+    path: '/public/confirm/:appointmentId',
     handler: 'publicController.confirm',
     middlewares: [],
     validation: {},
     swagger: {
       tags: ['Public'],
-      summary: 'Confirm appointment via patient link',
-      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
+      summary: 'Confirmar presença na consulta',
+      parameters: [{ in: 'path', name: 'appointmentId', required: true, schema: { type: 'string' } }],
       responses: {
-        200: { description: 'Appointment confirmed' },
-        400: { description: 'Invalid or expired token' },
+        200: { description: 'Consulta confirmada' },
+        404: { description: 'Consulta não encontrada' },
       },
     },
   },
@@ -36,11 +36,11 @@ module.exports = [
     validation: {},
     swagger: {
       tags: ['Public'],
-      summary: 'Get available slots for rescheduling via patient link',
+      summary: 'Buscar horários disponíveis para reagendamento',
       parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
       responses: {
-        200: { description: 'Available slots' },
-        400: { description: 'Invalid or expired token' },
+        200: { description: 'Horários disponíveis' },
+        400: { description: 'Link inválido ou expirado' },
       },
     },
   },
@@ -52,7 +52,7 @@ module.exports = [
     validation: { body: rescheduleSchema },
     swagger: {
       tags: ['Public'],
-      summary: 'Reschedule appointment via patient link',
+      summary: 'Reagendar consulta',
       parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
       requestBody: {
         required: true,
@@ -70,34 +70,38 @@ module.exports = [
         },
       },
       responses: {
-        200: { description: 'Appointment rescheduled' },
-        400: { description: 'Invalid token or slot unavailable' },
+        200: { description: 'Reagendado com sucesso' },
+        400: { description: 'Link inválido ou expirado' },
       },
     },
   },
   {
     method: 'get',
-    path: '/public/review/:token',
+    path: '/public/review/:linkId',
     handler: 'publicController.reviewInfo',
     middlewares: [],
     validation: {},
     swagger: {
       tags: ['Public'],
-      summary: 'Get appointment info for review form',
-      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
-      responses: { 200: { description: 'Appointment info' } },
+      summary: 'Buscar informações da consulta para o formulário de avaliação',
+      parameters: [{ in: 'path', name: 'linkId', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Dados da consulta' },
+        400: { description: 'Link inválido ou expirado' },
+        409: { description: 'Feedback já enviado' },
+      },
     },
   },
   {
     method: 'post',
-    path: '/public/review/:token',
+    path: '/public/review/:linkId',
     handler: 'publicController.submitReview',
     middlewares: [],
     validation: { body: reviewSchema },
     swagger: {
       tags: ['Public'],
-      summary: 'Submit a review via patient link',
-      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
+      summary: 'Enviar avaliação da consulta',
+      parameters: [{ in: 'path', name: 'linkId', required: true, schema: { type: 'string' } }],
       requestBody: {
         required: true,
         content: {
@@ -114,7 +118,10 @@ module.exports = [
           },
         },
       },
-      responses: { 201: { description: 'Review submitted' } },
+      responses: {
+        201: { description: 'Avaliação enviada' },
+        409: { description: 'Feedback já enviado para esta consulta' },
+      },
     },
   },
 ];

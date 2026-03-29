@@ -8,6 +8,7 @@ const reviewSchema = new mongoose.Schema({
   rating: { type: Number, required: true, min: 1, max: 5 },
   comment: { type: String, required: true },
   date: { type: String, required: true },
+  reviewLinkId: { type: String, default: null, sparse: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Review', reviewSchema);

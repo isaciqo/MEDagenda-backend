@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid');
+
 class GenerateAppointmentLinksOperation {
   constructor({ appointmentRepository, tokenService }) {
     this.appointmentRepository = appointmentRepository;
@@ -13,26 +15,23 @@ class GenerateAppointmentLinksOperation {
     }
 
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
-    const expiresIn = '7d';
 
-    const confirmToken = this.tokenService.generateTempToken(
-      { appointment_id, action: 'confirm' },
-      expiresIn
-    );
+    // Confirmar: usa o ID do agendamento diretamente
+    const confirmUrl = `${appUrl}/confirmar/${appointment_id}`;
+
+    // Reagendar: JWT com prazo de 7 dias
     const rescheduleToken = this.tokenService.generateTempToken(
       { appointment_id, action: 'reschedule' },
-      expiresIn
+      '7d'
     );
-    const reviewToken = this.tokenService.generateTempToken(
-      { appointment_id, action: 'review' },
-      expiresIn
-    );
+    const rescheduleUrl = `${appUrl}/reagendar/${rescheduleToken}`;
 
-    return {
-      confirmUrl: `${appUrl}/confirmar/${confirmToken}`,
-      rescheduleUrl: `${appUrl}/reagendar/${rescheduleToken}`,
-      reviewUrl: `${appUrl}/avaliar/${reviewToken}`,
-    };
+    // Avaliar: UUID único salvo no banco — cada novo link invalida o anterior
+    const reviewLinkId = uuidv4();
+    await this.appointmentRepository.update(appointment_id, { activeReviewLinkId: reviewLinkId });
+    const reviewUrl = `${appUrl}/avaliar/${reviewLinkId}`;
+
+    return { confirmUrl, rescheduleUrl, reviewUrl };
   }
 }
 
