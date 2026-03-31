@@ -10,6 +10,18 @@ module.exports = () => ({
     time: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
     estimatedValue: Joi.number().min(0).required(),
     notes: Joi.string().optional().allow(''),
+    returnDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    returnTime: Joi.string().pattern(/^\d{2}:\d{2}$/).optional(),
+    returnEstimatedValue: Joi.number().min(0).optional(),
+  }),
+
+  update: Joi.object({
+    patientName: Joi.string().optional(),
+    type: Joi.string().valid('presencial', 'online').optional(),
+    date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    time: Joi.string().pattern(/^\d{2}:\d{2}$/).optional(),
+    estimatedValue: Joi.number().min(0).optional(),
+    notes: Joi.string().optional().allow(''),
   }),
 
   realize: Joi.object({

@@ -3,7 +3,7 @@ class UpdatePatientOperation {
     this.patientRepository = patientRepository;
   }
 
-  async execute(patient_id, { name, phone }) {
+  async execute(patient_id, { name, phone, notes }) {
     const existing = await this.patientRepository.findById(patient_id);
     if (!existing) {
       const error = new Error('Paciente não encontrado');
@@ -22,6 +22,7 @@ class UpdatePatientOperation {
 
     const updateData = {};
     if (phone) updateData.phone = phone;
+    if (notes !== undefined) updateData.notes = notes;
 
     if (name && name !== existing.name) {
       const sameNameCount = await this.patientRepository.countByName(existing.doctor_id, name);
@@ -36,6 +37,7 @@ class UpdatePatientOperation {
       name: updated.name,
       displayName: updated.displayName,
       phone: updated.phone,
+      notes: updated.notes ?? '',
     };
   }
 }

@@ -77,6 +77,20 @@ module.exports = [
   },
   {
     method: 'patch',
+    path: '/appointments/:id',
+    handler: 'appointmentController.update',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.getById, body: appointmentSchema.update },
+    swagger: {
+      tags: ['Appointments'],
+      summary: 'Update appointment fields',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Appointment updated' } },
+    },
+  },
+  {
+    method: 'patch',
     path: '/appointments/:id/cancel',
     handler: 'appointmentController.cancel',
     middlewares: [authMiddleware],

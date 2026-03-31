@@ -26,6 +26,8 @@ const appointmentSchema = new mongoose.Schema({
   },
   notes: { type: String, default: '' },
   activeReviewLinkId: { type: String, default: null },
+  isReturn: { type: Boolean, default: false },
+  returnOf: { type: String, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

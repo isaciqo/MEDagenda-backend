@@ -23,6 +23,8 @@ class GetAppointmentOperation {
       paymentDate: a.paymentDate,
       status: a.status,
       notes: a.notes,
+      isReturn: a.isReturn ?? false,
+      returnOf: a.returnOf ?? null,
     };
   }
 }

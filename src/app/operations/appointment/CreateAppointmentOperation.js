@@ -6,11 +6,12 @@ class CreateAppointmentOperation {
     this.patientRepository = patientRepository;
   }
 
-  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, returnDate, returnTime, returnEstimatedValue }) {
     const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
 
+    const appointmentId = uuidv4();
     const appointment = await this.appointmentRepository.create({
-      appointment_id: uuidv4(),
+      appointment_id: appointmentId,
       doctor_id,
       patient: {
         id: patient.patient_id,
@@ -24,6 +25,26 @@ class CreateAppointmentOperation {
       notes: notes || '',
       status: 'agendado',
     });
+
+    if (returnDate) {
+      await this.appointmentRepository.create({
+        appointment_id: uuidv4(),
+        doctor_id,
+        patient: {
+          id: patient.patient_id,
+          name: patient.displayName,
+          phone: patient.phone,
+        },
+        type,
+        date: returnDate,
+        time: returnTime || time,
+        estimatedValue: returnEstimatedValue ?? estimatedValue,
+        notes: '',
+        status: 'agendado',
+        isReturn: true,
+        returnOf: appointmentId,
+      });
+    }
 
     return this._format(appointment);
   }
@@ -67,6 +88,8 @@ class CreateAppointmentOperation {
       paymentDate: a.paymentDate,
       status: a.status,
       notes: a.notes,
+      isReturn: a.isReturn ?? false,
+      returnOf: a.returnOf ?? null,
     };
   }
 }
