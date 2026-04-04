@@ -105,6 +105,36 @@ module.exports = [
   },
   {
     method: 'post',
+    path: '/auth/reset-password',
+    handler: 'authController.resetPassword',
+    middlewares: [],
+    validation: { body: authSchema.resetPassword },
+    swagger: {
+      tags: ['Auth'],
+      summary: 'Reset password using a valid token',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['token', 'newPassword'],
+              properties: {
+                token: { type: 'string' },
+                newPassword: { type: 'string', minLength: 6 },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        204: { description: 'Password reset successfully' },
+        400: { description: 'Invalid or expired token' },
+      },
+    },
+  },
+  {
+    method: 'post',
     path: '/auth/logout',
     handler: 'authController.logout',
     middlewares: [authMiddleware],

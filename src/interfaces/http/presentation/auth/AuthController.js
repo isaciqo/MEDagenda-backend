@@ -4,11 +4,13 @@ class AuthController {
     loginOperation,
     getMeOperation,
     requestPasswordResetOperation,
+    confirmPasswordResetOperation,
   }) {
     this.createUserOperation = createUserOperation;
     this.loginOperation = loginOperation;
     this.getMeOperation = getMeOperation;
     this.requestPasswordResetOperation = requestPasswordResetOperation;
+    this.confirmPasswordResetOperation = confirmPasswordResetOperation;
   }
 
   async register(req, res) {
@@ -28,6 +30,11 @@ class AuthController {
 
   async forgotPassword(req, res) {
     await this.requestPasswordResetOperation.execute(req.body.email);
+    res.status(204).send();
+  }
+
+  async resetPassword(req, res) {
+    await this.confirmPasswordResetOperation.execute(req.body);
     res.status(204).send();
   }
 

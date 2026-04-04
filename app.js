@@ -6,6 +6,7 @@ const container = require('./src/interfaces/http/container');
 const routerRegister = require('./src/interfaces/http/presentation/RouterRegister');
 const errorHandler = require('./src/interfaces/http/middlewares/errorHandler');
 const setupSwagger = require('./src/interfaces/http/presentation/swagger');
+const logger = require('./src/lib/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,11 +31,16 @@ setupSwagger(app);
 routerRegister(app, container);
 app.use(errorHandler);
 
-connectDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
+connectDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Swagger docs: http://localhost:${PORT}/api-docs`);
+    });
+  })
+  .catch((err) => {
+    logger.error('Failed to connect to database', { message: err.message, stack: err.stack });
+    process.exit(1);
   });
-});
 
 module.exports = app;

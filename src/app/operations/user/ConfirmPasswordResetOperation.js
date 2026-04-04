@@ -6,16 +6,19 @@ class ConfirmPasswordResetOperation {
   }
 
   async execute({ token, newPassword }) {
-    let decoded;
     try {
-      decoded = this.tokenService.verify(token);
+      this.tokenService.verify(token);
     } catch {
-      throw new Error('Invalid or expired reset token');
+      const err = new Error('Token inválido ou expirado');
+      err.status = 400;
+      throw err;
     }
 
     const user = await this.userRepository.findByResetToken(token);
     if (!user) {
-      throw new Error('Invalid or expired reset token');
+      const err = new Error('Token inválido ou expirado');
+      err.status = 400;
+      throw err;
     }
 
     const hashedPassword = await this.hashPasswordService.hash(newPassword);
