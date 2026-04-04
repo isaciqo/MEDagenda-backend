@@ -76,6 +76,20 @@ module.exports = [
     },
   },
   {
+    method: 'delete',
+    path: '/appointments/:id',
+    handler: 'appointmentController.delete',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.getById },
+    swagger: {
+      tags: ['Appointments'],
+      summary: 'Delete an appointment',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Appointment deleted' } },
+    },
+  },
+  {
     method: 'patch',
     path: '/appointments/:id',
     handler: 'appointmentController.update',

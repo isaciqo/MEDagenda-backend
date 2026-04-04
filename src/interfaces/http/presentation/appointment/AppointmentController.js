@@ -7,6 +7,7 @@ class AppointmentController {
     confirmAppointmentOperation,
     realizeAppointmentOperation,
     updateAppointmentOperation,
+    deleteAppointmentOperation,
     getReturnLinkOperation,
     generateAppointmentLinksOperation,
   }) {
@@ -17,6 +18,7 @@ class AppointmentController {
     this.confirmAppointmentOperation = confirmAppointmentOperation;
     this.realizeAppointmentOperation = realizeAppointmentOperation;
     this.updateAppointmentOperation = updateAppointmentOperation;
+    this.deleteAppointmentOperation = deleteAppointmentOperation;
     this.getReturnLinkOperation = getReturnLinkOperation;
     this.generateAppointmentLinksOperation = generateAppointmentLinksOperation;
   }
@@ -55,6 +57,11 @@ class AppointmentController {
 
   async realize(req, res) {
     const result = await this.realizeAppointmentOperation.execute(req.params.id, req.body);
+    res.status(200).json(result);
+  }
+
+  async delete(req, res) {
+    const result = await this.deleteAppointmentOperation.execute(req.params.id);
     res.status(200).json(result);
   }
 
