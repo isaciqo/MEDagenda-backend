@@ -1,21 +1,17 @@
-const logError = (level, err, req) => {
-  const entry = {
-    timestamp: new Date().toISOString(),
-    level,
+const logger = require('../../../lib/logger');
+
+// eslint-disable-next-line no-unused-vars
+const errorHandler = (err, req, res, _next) => {
+  const meta = {
     method: req.method,
     url: req.originalUrl,
-    status: err.status || (level === 'warn' ? 400 : 500),
-    error: err.name || 'Error',
-    message: err.message,
+    body: req.body,
     ...(err.details && { details: err.details.map(d => d.message) }),
-    ...(level === 'error' && { stack: err.stack }),
+    ...(err.stack && { stack: err.stack }),
   };
-  console[level]('[MEDagenda]', JSON.stringify(entry));
-};
 
-const errorHandler = (err, req, res, next) => {
   if (err.isJoi || err.name === 'ValidationError') {
-    logError('warn', err, req);
+    logger.warn('Validation error', { ...meta, details: err.details?.map(d => d.message) ?? [err.message] });
     return res.status(400).json({
       error: 'Validation Error',
       details: err.details ? err.details.map(d => d.message) : [err.message],
@@ -23,11 +19,16 @@ const errorHandler = (err, req, res, next) => {
   }
 
   if (err.name === 'UnauthorizedError') {
-    logError('warn', { ...err, status: 401 }, req);
+    logger.warn('Unauthorized', { ...meta, message: err.message });
     return res.status(401).json({ error: 'Unauthorized', message: err.message });
   }
 
-  logError('error', err, req);
+  if (err.status && err.status >= 400 && err.status < 500) {
+    logger.warn(err.message, meta);
+    return res.status(err.status).json({ error: 'Bad Request', message: err.message });
+  }
+
+  logger.error(err.message || 'Internal Server Error', meta);
   return res.status(500).json({ error: 'Internal Server Error', message: err.message });
 };
 

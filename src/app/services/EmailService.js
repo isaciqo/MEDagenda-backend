@@ -1,5 +1,24 @@
 const nodemailer = require('nodemailer');
 
+// ─────────────────────────────────────────────────────────────
+// EmailService
+//
+// Atualmente usa nodemailer via SMTP (serviço gratuito, ex: Gmail,
+// Brevo SMTP, Mailgun SMTP, Ethereal para testes).
+//
+// Para trocar para uma API de email (Resend, Brevo API, SendGrid):
+//   1. Instale o SDK do provedor escolhido.
+//   2. Crie uma classe que implemente os mesmos métodos:
+//        sendPasswordResetEmail({ email, name, token })
+//        sendConfirmationEmail({ email, name, token })
+//   3. Substitua a instância registrada no container (container.js)
+//      apontando para a nova classe.
+//   Exemplo para Resend: `npm install resend`
+//     const { Resend } = require('resend');
+//     this.client = new Resend(process.env.RESEND_API_KEY);
+//     await this.client.emails.send({ from, to, subject, html });
+// ─────────────────────────────────────────────────────────────
+
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -10,26 +29,44 @@ class EmailService {
         pass: process.env.EMAIL_PASS,
       },
     });
-    this.appUrl = process.env.APP_URL || 'http://localhost:3000';
+
+    // URL do frontend (não da API) — ex: https://meuapp.com
+    this.frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   }
 
   async sendConfirmationEmail({ email, name, token }) {
-    const confirmUrl = `${this.appUrl}/api/v1/users/confirm/${token}`;
+    const confirmUrl = `${this.frontendUrl}/confirm-email?token=${token}`;
     await this.transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Confirm your email',
-      html: `<p>Hi ${name},</p><p>Click <a href="${confirmUrl}">here</a> to confirm your email.</p>`,
+      subject: 'Confirme seu e-mail — MedAgenda',
+      html: `
+        <p>Olá, ${name}!</p>
+        <p>Clique no link abaixo para confirmar seu e-mail:</p>
+        <p><a href="${confirmUrl}">${confirmUrl}</a></p>
+        <p>Este link expira em 1 hora.</p>
+      `,
     });
   }
 
   async sendPasswordResetEmail({ email, name, token }) {
-    const resetUrl = `${this.appUrl}/api/v1/users/reset-password/${token}`;
+    const resetUrl = `${this.frontendUrl}/reset-password?token=${token}`;
     await this.transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Reset your password',
-      html: `<p>Hi ${name},</p><p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`,
+      subject: 'Redefinição de senha — MedAgenda',
+      html: `
+        <p>Olá, ${name}!</p>
+        <p>Clique no botão abaixo para redefinir sua senha:</p>
+        <p>
+          <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">
+            Redefinir senha
+          </a>
+        </p>
+        <p style="color:#6b7280;font-size:13px;">
+          Este link expira em 1 hora. Se você não solicitou a redefinição, ignore este e-mail.
+        </p>
+      `,
     });
   }
 }
