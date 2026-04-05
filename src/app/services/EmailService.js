@@ -1,34 +1,42 @@
-const { Resend } = require('resend');
+const { MailerSend, EmailParams, Sender, Recipient } = require('mailersend');
 
 class EmailService {
   constructor() {
-    this.client = new Resend(process.env.RESEND_API_KEY);
+    this.client = new MailerSend({ apiKey: process.env.MAILERSEND_API_KEY });
     this.frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    this.fromEmail = process.env.EMAIL_FROM || 'MedAgenda <noreply@resend.dev>';
+    this.fromEmail = process.env.EMAIL_FROM_ADDRESS || 'noreply@trial-o65qngkvz4el3zxj.mlsender.net';
+    this.fromName = process.env.EMAIL_FROM_NAME || 'MedAgenda';
   }
 
   async sendConfirmationEmail({ email, name, token }) {
     const confirmUrl = `${this.frontendUrl}/confirm-email?token=${token}`;
-    await this.client.emails.send({
-      from: this.fromEmail,
-      to: email,
-      subject: 'Confirme seu e-mail - MedAgenda',
-      html: `
+    const sender = new Sender(this.fromEmail, this.fromName);
+    const recipients = [new Recipient(email, name)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sender)
+      .setTo(recipients)
+      .setSubject('Confirme seu e-mail - MedAgenda')
+      .setHtml(`
         <p>Ola, ${name}!</p>
         <p>Clique no link abaixo para confirmar seu e-mail:</p>
         <p><a href="${confirmUrl}">${confirmUrl}</a></p>
         <p>Este link expira em 1 hora.</p>
-      `,
-    });
+      `);
+
+    return this.client.email.send(emailParams);
   }
 
   async sendPasswordResetEmail({ email, name, token }) {
     const resetUrl = `${this.frontendUrl}/reset-password?token=${token}`;
-    await this.client.emails.send({
-      from: this.fromEmail,
-      to: email,
-      subject: 'Redefinicao de senha - MedAgenda',
-      html: `
+    const sender = new Sender(this.fromEmail, this.fromName);
+    const recipients = [new Recipient(email, name)];
+
+    const emailParams = new EmailParams()
+      .setFrom(sender)
+      .setTo(recipients)
+      .setSubject('Redefinicao de senha - MedAgenda')
+      .setHtml(`
         <p>Ola, ${name}!</p>
         <p>Clique no botao abaixo para redefinir sua senha:</p>
         <p>
@@ -39,8 +47,9 @@ class EmailService {
         <p style="color:#6b7280;font-size:13px;">
           Este link expira em 1 hora. Se voce nao solicitou a redefinicao, ignore este e-mail.
         </p>
-      `,
-    });
+      `);
+
+    return this.client.email.send(emailParams);
   }
 }
 

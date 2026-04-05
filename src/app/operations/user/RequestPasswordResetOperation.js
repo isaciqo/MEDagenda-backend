@@ -28,7 +28,7 @@ class RequestPasswordResetOperation {
       const response = await this.emailService.sendPasswordResetEmail({ email, name: user.name, token });
       logger.info('forgot-password: e-mail enviado com sucesso', { email, response });
     } catch (err) {
-      logger.error('forgot-password: falha ao enviar e-mail', { email, message: err.message, stack: err.stack });
+      logger.error('forgot-password: falha ao enviar e-mail', { email, error: JSON.stringify(err) });
       throw err;
     }
 
