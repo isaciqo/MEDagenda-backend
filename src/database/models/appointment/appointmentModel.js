@@ -25,6 +25,7 @@ const appointmentSchema = new mongoose.Schema({
     default: 'agendado',
   },
   notes: { type: String, default: '' },
+  location: { type: String, default: '' },
   activeReviewLinkId: { type: String, default: null },
   isReturn: { type: Boolean, default: false },
   returnOf: { type: String, default: null },

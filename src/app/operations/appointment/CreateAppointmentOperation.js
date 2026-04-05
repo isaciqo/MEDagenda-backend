@@ -6,7 +6,7 @@ class CreateAppointmentOperation {
     this.patientRepository = patientRepository;
   }
 
-  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, returnDate, returnTime, returnEstimatedValue }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, returnDate, returnTime, returnEstimatedValue }) {
     const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
 
     const appointmentId = uuidv4();
@@ -23,6 +23,7 @@ class CreateAppointmentOperation {
       time,
       estimatedValue,
       notes: notes || '',
+      location: type === 'presencial' ? (location || '') : '',
       status: 'agendado',
     });
 
@@ -40,6 +41,7 @@ class CreateAppointmentOperation {
         time: returnTime || time,
         estimatedValue: returnEstimatedValue ?? estimatedValue,
         notes: '',
+        location: type === 'presencial' ? (location || '') : '',
         status: 'agendado',
         isReturn: true,
         returnOf: appointmentId,
@@ -88,6 +90,7 @@ class CreateAppointmentOperation {
       paymentDate: a.paymentDate,
       status: a.status,
       notes: a.notes,
+      location: a.location || '',
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
     };

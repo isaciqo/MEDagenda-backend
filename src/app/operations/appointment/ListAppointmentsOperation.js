@@ -17,6 +17,7 @@ class ListAppointmentsOperation {
       paymentDate: a.paymentDate,
       status: a.status,
       notes: a.notes,
+      location: a.location || '',
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
     }));

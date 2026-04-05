@@ -10,6 +10,7 @@ module.exports = () => ({
     time: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
     estimatedValue: Joi.number().min(0).required(),
     notes: Joi.string().optional().allow(''),
+    location: Joi.string().optional().allow(''),
     returnDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
     returnTime: Joi.string().pattern(/^\d{2}:\d{2}$/).optional(),
     returnEstimatedValue: Joi.number().min(0).optional(),
