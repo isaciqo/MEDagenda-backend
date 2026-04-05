@@ -16,8 +16,9 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null },
   specialty: { type: String, default: '' },
+  clinicAddress: { type: String, default: '' },
   photoUrl: { type: String, default: null },
-  whatsappTemplate: { type: String, default: 'Olá {nome}, confirmando sua consulta em {data} às {hora}.' },
+  whatsappTemplate: { type: String, default: 'Olá {nome}, confirmando sua consulta em {data} às {hora} com {medico}. Confirma sua presenca? {link}' },
   defaultDuration: { type: Number, default: 30 },
   schedule: {
     type: Map,

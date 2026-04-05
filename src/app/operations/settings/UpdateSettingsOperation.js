@@ -14,6 +14,7 @@ class UpdateSettingsOperation {
     const updateData = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.specialty !== undefined) updateData.specialty = data.specialty;
+    if (data.clinicAddress !== undefined) updateData.clinicAddress = data.clinicAddress;
     if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
     if (data.whatsappTemplate !== undefined) updateData.whatsappTemplate = data.whatsappTemplate;
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
@@ -28,6 +29,7 @@ class UpdateSettingsOperation {
     return {
       name: updated.name,
       specialty: updated.specialty,
+      clinicAddress: updated.clinicAddress || '',
       photoUrl: updated.photoUrl,
       whatsappTemplate: updated.whatsappTemplate,
       defaultDuration: updated.defaultDuration,

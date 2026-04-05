@@ -10,6 +10,7 @@ module.exports = () => ({
   update: Joi.object({
     name: Joi.string().optional(),
     specialty: Joi.string().optional().allow(''),
+    clinicAddress: Joi.string().optional().allow(''),
     photoUrl: Joi.string().uri().optional().allow('', null),
     whatsappTemplate: Joi.string().optional(),
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),

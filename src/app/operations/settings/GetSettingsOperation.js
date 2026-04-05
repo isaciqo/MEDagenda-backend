@@ -18,6 +18,7 @@ class GetSettingsOperation {
     return {
       name: user.name,
       specialty: user.specialty,
+      clinicAddress: user.clinicAddress || '',
       photoUrl: user.photoUrl,
       whatsappTemplate: user.whatsappTemplate,
       defaultDuration: user.defaultDuration,
