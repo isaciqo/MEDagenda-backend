@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cron = require('node-cron');
 const connectDatabase = require('./src/database/connection');
 const container = require('./src/interfaces/http/container');
 const routerRegister = require('./src/interfaces/http/presentation/RouterRegister');
@@ -77,6 +78,17 @@ connectDatabase()
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Swagger docs: http://localhost:${PORT}/api-docs`);
     });
+
+    // Roda todos os dias às 09:00 (hora do servidor)
+    cron.schedule('0 9 * * *', async () => {
+      try {
+        const job = container.resolve('trialWarningJob');
+        await job.run();
+      } catch (err) {
+        logger.error('TrialWarningJob: erro ao executar cron', { message: err.message });
+      }
+    });
+    logger.info('Cron: TrialWarningJob agendado para 09:00 diariamente');
   })
   .catch((err) => {
     logger.error('Failed to connect to database', { message: err.message, stack: err.stack });

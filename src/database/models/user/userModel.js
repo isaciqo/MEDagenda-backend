@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
   stripeCustomerId: { type: String, default: null },
   stripeSubscriptionId: { type: String, default: null },
   googleId: { type: String, default: null, sparse: true },
+  trialWarningSentAt: { type: Date, default: null },
   schedule: {
     type: Map,
     of: scheduleSchema,

@@ -7,6 +7,7 @@ container.loadModules(
   [
     'src/app/operations/**/*.js',
     'src/app/services/**/*.js',
+    'src/app/jobs/**/*.js',
     'src/infrastructure/repositories/**/*.js',
     'src/interfaces/http/presentation/**/*Controller.js',
   ],

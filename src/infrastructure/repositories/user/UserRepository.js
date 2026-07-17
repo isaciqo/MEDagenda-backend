@@ -21,6 +21,17 @@ class UserRepository {
     return User.findOne({ googleId });
   }
 
+  async findExpiringTrials(withinDays = 7) {
+    const now = new Date();
+    const deadline = new Date(now.getTime() + withinDays * 24 * 60 * 60 * 1000);
+    return User.find({
+      plan: 'trial',
+      isConfirmed: true,
+      trialExpiresAt: { $gte: now, $lte: deadline },
+      trialWarningSentAt: null,
+    });
+  }
+
   async create(data) {
     const user = new User(data);
     return user.save();
