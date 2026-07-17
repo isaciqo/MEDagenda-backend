@@ -27,8 +27,14 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
   location: { type: String, default: '' },
   activeReviewLinkId: { type: String, default: null },
+  confirmToken: { type: String, default: null },
+  confirmTokenExpires: { type: Date, default: null },
+  expiresAt: { type: Date, default: null },
   isReturn: { type: Boolean, default: false },
   returnOf: { type: String, default: null },
 }, { timestamps: true });
+
+// TTL: MongoDB deleta automaticamente quando expiresAt <= now
+appointmentSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

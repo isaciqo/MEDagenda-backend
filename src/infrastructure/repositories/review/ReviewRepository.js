@@ -17,6 +17,15 @@ class ReviewRepository {
     const review = new Review(data);
     return review.save();
   }
+
+  async findByAppointmentIds(appointmentIds) {
+    return Review.find({ appointment_id: { $in: appointmentIds } });
+  }
+
+  async deleteByAppointmentIds(appointmentIds) {
+    if (!appointmentIds.length) return;
+    return Review.deleteMany({ appointment_id: { $in: appointmentIds } });
+  }
 }
 
 module.exports = ReviewRepository;

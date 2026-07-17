@@ -9,7 +9,6 @@ module.exports = () => ({
   update: Joi.object({
     name: Joi.string().optional(),
     phone: Joi.string().optional(),
-    notes: Joi.string().optional().allow(''),
   }),
 
   getById: Joi.object({

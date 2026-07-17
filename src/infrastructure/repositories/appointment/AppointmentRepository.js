@@ -25,6 +25,13 @@ class AppointmentRepository {
     return Appointment.findOne({ activeReviewLinkId: reviewLinkId });
   }
 
+  async findByConfirmToken(token) {
+    return Appointment.findOne({
+      confirmToken: token,
+      confirmTokenExpires: { $gt: new Date() },
+    });
+  }
+
   async delete(appointment_id) {
     return Appointment.findOneAndDelete({ appointment_id });
   }
@@ -34,6 +41,26 @@ class AppointmentRepository {
     if (from) filter.date = { ...filter.date, $gte: from };
     if (to) filter.date = { ...filter.date, $lte: to };
     return Appointment.find(filter).sort({ date: 1, time: 1 });
+  }
+
+  async findByPatientId(patient_id) {
+    return Appointment.find({ 'patient.id': patient_id });
+  }
+
+  async deleteByPatientId(patient_id) {
+    return Appointment.deleteMany({ 'patient.id': patient_id });
+  }
+
+  async countByDoctorAndMonth(doctor_id, year, month) {
+    const pad = String(month).padStart(2, '0');
+    const from = `${year}-${pad}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const to = `${year}-${pad}-${String(lastDay).padStart(2, '0')}`;
+    return Appointment.countDocuments({
+      doctor_id,
+      date: { $gte: from, $lte: to },
+      status: { $ne: 'cancelado' },
+    });
   }
 }
 

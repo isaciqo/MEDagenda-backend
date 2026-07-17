@@ -3,11 +3,17 @@ class UpdateAppointmentOperation {
     this.appointmentRepository = appointmentRepository;
   }
 
-  async execute(appointment_id, { patientName, type, date, time, estimatedValue, notes }) {
+  async execute(appointment_id, doctor_id, { patientName, type, date, time, estimatedValue, notes }) {
     const existing = await this.appointmentRepository.findById(appointment_id);
     if (!existing) {
       const error = new Error('Consulta não encontrada');
       error.statusCode = 404;
+      throw error;
+    }
+
+    if (existing.doctor_id !== doctor_id) {
+      const error = new Error('Acesso negado');
+      error.statusCode = 403;
       throw error;
     }
 

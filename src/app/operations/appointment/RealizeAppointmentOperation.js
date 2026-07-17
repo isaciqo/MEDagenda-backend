@@ -1,13 +1,23 @@
+const logger = require('../../../lib/logger');
+
 class RealizeAppointmentOperation {
   constructor({ appointmentRepository }) {
     this.appointmentRepository = appointmentRepository;
   }
 
-  async execute(appointment_id, { paidValue, paymentMethod, paymentDate }) {
+  async execute(appointment_id, doctor_id, { paidValue, paymentMethod, paymentDate }) {
     const existing = await this.appointmentRepository.findById(appointment_id);
     if (!existing) {
+      logger.warn('appointment.realize: consulta não encontrada', { appointment_id, doctor_id });
       const error = new Error('Appointment not found');
       error.statusCode = 404;
+      throw error;
+    }
+
+    if (existing.doctor_id !== doctor_id) {
+      logger.warn('appointment.realize: acesso negado (IDOR)', { appointment_id, doctor_id });
+      const error = new Error('Acesso negado');
+      error.statusCode = 403;
       throw error;
     }
 
@@ -16,6 +26,13 @@ class RealizeAppointmentOperation {
       paidValue,
       paymentMethod,
       paymentDate,
+    });
+
+    logger.info('appointment.realize: consulta realizada', {
+      appointment_id,
+      doctor_id,
+      paidValue,
+      paymentMethod,
     });
 
     return {

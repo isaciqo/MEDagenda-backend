@@ -14,14 +14,14 @@ const reviewSchema = Joi.object({
 module.exports = [
   {
     method: 'post',
-    path: '/public/confirm/:appointmentId',
+    path: '/public/confirm/:token',
     handler: 'publicController.confirm',
     middlewares: [],
     validation: {},
     swagger: {
       tags: ['Public'],
       summary: 'Confirmar presença na consulta',
-      parameters: [{ in: 'path', name: 'appointmentId', required: true, schema: { type: 'string' } }],
+      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
       responses: {
         200: { description: 'Consulta confirmada' },
         404: { description: 'Consulta não encontrada' },

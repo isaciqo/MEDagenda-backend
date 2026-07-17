@@ -14,7 +14,7 @@ class PublicController {
   }
 
   async confirm(req, res) {
-    const result = await this.confirmByIdOperation.execute(req.params.appointmentId);
+    const result = await this.confirmByIdOperation.execute(req.params.token);
     res.status(200).json(result);
   }
 

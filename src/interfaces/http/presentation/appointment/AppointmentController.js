@@ -10,6 +10,7 @@ class AppointmentController {
     deleteAppointmentOperation,
     getReturnLinkOperation,
     generateAppointmentLinksOperation,
+    auditService,
   }) {
     this.createAppointmentOperation = createAppointmentOperation;
     this.listAppointmentsOperation = listAppointmentsOperation;
@@ -21,12 +22,20 @@ class AppointmentController {
     this.deleteAppointmentOperation = deleteAppointmentOperation;
     this.getReturnLinkOperation = getReturnLinkOperation;
     this.generateAppointmentLinksOperation = generateAppointmentLinksOperation;
+    this.auditService = auditService;
   }
 
   async create(req, res) {
     const result = await this.createAppointmentOperation.execute({
       doctor_id: req.user.user_id,
       ...req.body,
+    });
+    await this.auditService.log({
+      actor_id: req.user.user_id,
+      action: 'appointment.create',
+      resource_type: 'appointment',
+      resource_id: result.id,
+      ip_address: req.ip,
     });
     res.status(201).json(result);
   }
@@ -41,12 +50,19 @@ class AppointmentController {
   }
 
   async getById(req, res) {
-    const result = await this.getAppointmentOperation.execute(req.params.id);
+    const result = await this.getAppointmentOperation.execute(req.params.id, req.user.user_id);
     res.status(200).json(result);
   }
 
   async cancel(req, res) {
-    const result = await this.cancelAppointmentOperation.execute(req.params.id);
+    const result = await this.cancelAppointmentOperation.execute(req.params.id, req.user.user_id);
+    await this.auditService.log({
+      actor_id: req.user.user_id,
+      action: 'appointment.cancel',
+      resource_type: 'appointment',
+      resource_id: req.params.id,
+      ip_address: req.ip,
+    });
     res.status(200).json(result);
   }
 
@@ -56,17 +72,24 @@ class AppointmentController {
   }
 
   async realize(req, res) {
-    const result = await this.realizeAppointmentOperation.execute(req.params.id, req.body);
+    const result = await this.realizeAppointmentOperation.execute(req.params.id, req.user.user_id, req.body);
     res.status(200).json(result);
   }
 
   async delete(req, res) {
-    const result = await this.deleteAppointmentOperation.execute(req.params.id);
+    const result = await this.deleteAppointmentOperation.execute(req.params.id, req.user.user_id);
+    await this.auditService.log({
+      actor_id: req.user.user_id,
+      action: 'appointment.delete',
+      resource_type: 'appointment',
+      resource_id: req.params.id,
+      ip_address: req.ip,
+    });
     res.status(200).json(result);
   }
 
   async update(req, res) {
-    const result = await this.updateAppointmentOperation.execute(req.params.id, req.body);
+    const result = await this.updateAppointmentOperation.execute(req.params.id, req.user.user_id, req.body);
     res.status(200).json(result);
   }
 

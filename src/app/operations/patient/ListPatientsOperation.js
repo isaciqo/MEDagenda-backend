@@ -13,7 +13,6 @@ class ListPatientsOperation {
       name: p.name,
       displayName: p.displayName,
       phone: p.phone,
-      notes: p.notes ?? '',
     }));
   }
 }

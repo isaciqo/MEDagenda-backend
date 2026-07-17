@@ -1,12 +1,35 @@
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../../../lib/logger');
+
+const EXPIRY_YEARS = parseInt(process.env.APPOINTMENT_EXPIRY_YEARS) || 2;
+
+function getExpiresAt() {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + EXPIRY_YEARS);
+  return d;
+}
 
 class CreateAppointmentOperation {
-  constructor({ appointmentRepository, patientRepository }) {
+  constructor({ appointmentRepository, patientRepository, userRepository, planService }) {
     this.appointmentRepository = appointmentRepository;
     this.patientRepository = patientRepository;
+    this.userRepository = userRepository;
+    this.planService = planService;
   }
 
   async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, returnDate, returnTime, returnEstimatedValue }) {
+    // ── Plan enforcement ───────────────────────────────────────────
+    const user = await this.userRepository.findById(doctor_id);
+    if (user) {
+      const now = new Date();
+      const monthlyCount = await this.appointmentRepository.countByDoctorAndMonth(
+        doctor_id, now.getFullYear(), now.getMonth() + 1
+      );
+      const newCount = 1 + (returnDate ? 1 : 0);
+      this.planService.canCreateAppointment(user, monthlyCount, newCount);
+    }
+    // ──────────────────────────────────────────────────────────────
+
     const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
 
     const appointmentId = uuidv4();
@@ -25,11 +48,22 @@ class CreateAppointmentOperation {
       notes: notes || '',
       location: type === 'presencial' ? (location || '') : '',
       status: 'agendado',
+      expiresAt: getExpiresAt(),
+    });
+
+    logger.info('appointment.create: consulta agendada', {
+      doctor_id,
+      appointment_id: appointmentId,
+      patient_id: patient.patient_id,
+      date,
+      time,
+      type,
     });
 
     if (returnDate) {
+      const returnId = uuidv4();
       await this.appointmentRepository.create({
-        appointment_id: uuidv4(),
+        appointment_id: returnId,
         doctor_id,
         patient: {
           id: patient.patient_id,
@@ -45,6 +79,14 @@ class CreateAppointmentOperation {
         status: 'agendado',
         isReturn: true,
         returnOf: appointmentId,
+        expiresAt: getExpiresAt(),
+      });
+
+      logger.info('appointment.create: retorno agendado', {
+        doctor_id,
+        appointment_id: returnId,
+        return_of: appointmentId,
+        date: returnDate,
       });
     }
 
@@ -52,19 +94,16 @@ class CreateAppointmentOperation {
   }
 
   async _resolvePatient({ doctor_id, patientId, patientName, patientPhone }) {
-    // 1. Se veio patientId (autocomplete selecionado), busca direto
     if (patientId) {
       const found = await this.patientRepository.findById(patientId);
       if (found) return found;
     }
 
-    // 2. Tenta encontrar pelo telefone
     if (patientPhone) {
       const byPhone = await this.patientRepository.findByPhone(doctor_id, patientPhone);
       if (byPhone) return byPhone;
     }
 
-    // 3. Cria novo paciente automaticamente
     const sameNameCount = await this.patientRepository.countByName(doctor_id, patientName);
     const displayName = sameNameCount === 0 ? patientName : `${patientName} (paciente ${sameNameCount + 1})`;
 

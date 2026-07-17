@@ -71,10 +71,24 @@ module.exports = [
     validation: { params: patientSchema.getById },
     swagger: {
       tags: ['Patients'],
-      summary: 'Delete patient',
+      summary: 'Delete patient and all linked data (LGPD cascade)',
       security: [{ BearerAuth: [] }],
       parameters: [{ in: 'path', name: 'patient_id', required: true, schema: { type: 'string' } }],
-      responses: { 200: { description: 'Patient deleted' }, 404: { description: 'Not found' } },
+      responses: { 200: { description: 'Patient and all linked data deleted' }, 404: { description: 'Not found' } },
+    },
+  },
+  {
+    method: 'get',
+    path: '/patients/:patient_id/export',
+    handler: 'patientController.exportData',
+    middlewares: [authMiddleware],
+    validation: { params: patientSchema.getById },
+    swagger: {
+      tags: ['Patients'],
+      summary: 'Export all patient data (LGPD DSAR)',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'patient_id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Full patient data export' }, 404: { description: 'Not found' } },
     },
   },
 ];

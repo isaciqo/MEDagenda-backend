@@ -3,11 +3,11 @@ class ConfirmByIdOperation {
     this.appointmentRepository = appointmentRepository;
   }
 
-  async execute(appointment_id) {
-    const appointment = await this.appointmentRepository.findById(appointment_id);
+  async execute(token) {
+    const appointment = await this.appointmentRepository.findByConfirmToken(token);
     if (!appointment) {
-      const error = new Error('Consulta não encontrada');
-      error.statusCode = 404;
+      const error = new Error('Link de confirmação inválido ou expirado');
+      error.statusCode = 400;
       throw error;
     }
 
@@ -26,7 +26,11 @@ class ConfirmByIdOperation {
       };
     }
 
-    await this.appointmentRepository.update(appointment_id, { status: 'confirmado' });
+    await this.appointmentRepository.update(appointment.appointment_id, {
+      status: 'confirmado',
+      confirmToken: null,
+      confirmTokenExpires: null,
+    });
 
     return {
       alreadyConfirmed: false,

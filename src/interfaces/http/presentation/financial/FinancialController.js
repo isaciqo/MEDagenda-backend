@@ -6,7 +6,8 @@ class FinancialController {
   async summary(req, res) {
     const result = await this.getFinancialSummaryOperation.execute({
       doctor_id: req.user.user_id,
-      period: req.query.period,
+      view:  req.query.view,
+      month: req.query.month,
     });
     res.status(200).json(result);
   }

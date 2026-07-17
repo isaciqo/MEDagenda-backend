@@ -3,11 +3,17 @@ class GetAppointmentOperation {
     this.appointmentRepository = appointmentRepository;
   }
 
-  async execute(appointment_id) {
+  async execute(appointment_id, doctor_id) {
     const a = await this.appointmentRepository.findById(appointment_id);
     if (!a) {
       const error = new Error('Appointment not found');
       error.statusCode = 404;
+      throw error;
+    }
+
+    if (a.doctor_id !== doctor_id) {
+      const error = new Error('Acesso negado');
+      error.statusCode = 403;
       throw error;
     }
 

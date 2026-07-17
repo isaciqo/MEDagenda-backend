@@ -3,11 +3,16 @@ class UpdatePatientOperation {
     this.patientRepository = patientRepository;
   }
 
-  async execute(patient_id, { name, phone, notes }) {
+  async execute(patient_id, { name, phone }, doctor_id) {
     const existing = await this.patientRepository.findById(patient_id);
     if (!existing) {
-      const error = new Error('Paciente não encontrado');
+      const error = new Error('Cliente não encontrado');
       error.statusCode = 404;
+      throw error;
+    }
+    if (existing.doctor_id !== doctor_id) {
+      const error = new Error('Acesso negado');
+      error.statusCode = 403;
       throw error;
     }
 
@@ -22,12 +27,11 @@ class UpdatePatientOperation {
 
     const updateData = {};
     if (phone) updateData.phone = phone;
-    if (notes !== undefined) updateData.notes = notes;
 
     if (name && name !== existing.name) {
       const sameNameCount = await this.patientRepository.countByName(existing.doctor_id, name);
       updateData.name = name;
-      updateData.displayName = sameNameCount === 0 ? name : `${name} (paciente ${sameNameCount + 1})`;
+      updateData.displayName = sameNameCount === 0 ? name : `${name} (cliente ${sameNameCount + 1})`;
     }
 
     const updated = await this.patientRepository.update(patient_id, updateData);
@@ -37,7 +41,6 @@ class UpdatePatientOperation {
       name: updated.name,
       displayName: updated.displayName,
       phone: updated.phone,
-      notes: updated.notes ?? '',
     };
   }
 }

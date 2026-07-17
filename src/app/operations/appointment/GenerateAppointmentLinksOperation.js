@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 class GenerateAppointmentLinksOperation {
   constructor({ appointmentRepository, tokenService }) {
@@ -16,8 +17,11 @@ class GenerateAppointmentLinksOperation {
 
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
 
-    // Confirmar: usa o ID do agendamento diretamente
-    const confirmUrl = `${appUrl}/confirmar/${appointment_id}`;
+    // Confirmar: token curto de 8 chars, expira em 48h
+    const confirmToken = crypto.randomBytes(6).toString('base64url');
+    const confirmTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await this.appointmentRepository.update(appointment_id, { confirmToken, confirmTokenExpires });
+    const confirmUrl = `${appUrl}/confirmar/${confirmToken}`;
 
     // Reagendar: JWT com prazo de 7 dias
     const rescheduleToken = this.tokenService.generateTempToken(

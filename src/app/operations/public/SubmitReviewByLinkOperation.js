@@ -6,7 +6,7 @@ class SubmitReviewByLinkOperation {
     this.reviewRepository = reviewRepository;
   }
 
-  async execute(reviewLinkId, { patientName, rating, comment }) {
+  async execute(reviewLinkId, { rating, comment }) {
     const appointment = await this.appointmentRepository.findByReviewLinkId(reviewLinkId);
     if (!appointment) {
       const error = new Error('Link inválido ou expirado');
@@ -27,7 +27,7 @@ class SubmitReviewByLinkOperation {
       doctor_id: appointment.doctor_id,
       appointment_id: appointment.appointment_id,
       reviewLinkId,
-      patientName: patientName || null,
+      patientName: appointment.patient.name,
       rating,
       comment,
       date: today,
