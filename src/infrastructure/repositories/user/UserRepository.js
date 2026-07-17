@@ -9,8 +9,16 @@ class UserRepository {
     return User.findOne({ email });
   }
 
-  async findByResetToken(token) {
-    return User.findOne({ resetPasswordToken: token, resetPasswordExpires: { $gt: Date.now() } });
+  async findByResetTokenHash(tokenHash) {
+    return User.findOne({ resetPasswordToken: tokenHash, resetPasswordExpires: { $gt: Date.now() } });
+  }
+
+  async findByStripeCustomerId(stripeCustomerId) {
+    return User.findOne({ stripeCustomerId });
+  }
+
+  async findByGoogleId(googleId) {
+    return User.findOne({ googleId });
   }
 
   async create(data) {
@@ -25,6 +33,24 @@ class UserRepository {
   async delete(user_id) {
     return User.findOneAndDelete({ user_id });
   }
+
+  async incrementTokenVersion(user_id) {
+    return User.findOneAndUpdate({ user_id }, { $inc: { tokenVersion: 1 } }, { new: true });
+  }
+
+  async incrementLoginAttempts(user_id) {
+    return User.findOneAndUpdate({ user_id }, { $inc: { loginAttempts: 1 } }, { new: true });
+  }
+
+  async lockAccount(user_id) {
+    const lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+    return User.findOneAndUpdate({ user_id }, { loginAttempts: 5, lockUntil }, { new: true });
+  }
+
+  async resetLoginAttempts(user_id) {
+    return User.findOneAndUpdate({ user_id }, { loginAttempts: 0, lockUntil: null }, { new: true });
+  }
+
 }
 
 module.exports = UserRepository;

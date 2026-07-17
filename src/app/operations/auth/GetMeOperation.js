@@ -1,6 +1,8 @@
 class GetMeOperation {
-  constructor({ userRepository }) {
+  constructor({ userRepository, planService, appointmentRepository }) {
     this.userRepository = userRepository;
+    this.planService = planService;
+    this.appointmentRepository = appointmentRepository;
   }
 
   async execute(user_id) {
@@ -11,6 +13,13 @@ class GetMeOperation {
       throw error;
     }
 
+    const now = new Date();
+    const monthlyCount = await this.appointmentRepository.countByDoctorAndMonth(
+      user_id,
+      now.getFullYear(),
+      now.getMonth() + 1
+    );
+
     return {
       id: user.user_id,
       email: user.email,
@@ -18,6 +27,7 @@ class GetMeOperation {
       specialty: user.specialty,
       photoUrl: user.photoUrl,
       createdAt: user.createdAt,
+      ...this.planService.buildPlanInfo(user, monthlyCount),
     };
   }
 }
