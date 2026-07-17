@@ -9,6 +9,7 @@ class UserController {
     emailConfirmationOperation,
     requestPasswordResetOperation,
     confirmPasswordResetOperation,
+    auditService,
   }) {
     this.createUserOperation = createUserOperation;
     this.loginOperation = loginOperation;
@@ -19,6 +20,7 @@ class UserController {
     this.emailConfirmationOperation = emailConfirmationOperation;
     this.requestPasswordResetOperation = requestPasswordResetOperation;
     this.confirmPasswordResetOperation = confirmPasswordResetOperation;
+    this.auditService = auditService;
   }
 
   async createUser(req, res) {
@@ -33,6 +35,12 @@ class UserController {
 
   async confirmEmail(req, res) {
     const result = await this.emailConfirmationOperation.execute(req.params.token);
+    await this.auditService.log({
+      actor_id: req.params.token,
+      action: 'auth.email_confirmed',
+      resource_type: 'user',
+      ip_address: req.ip,
+    });
     res.status(200).json(result);
   }
 
@@ -60,6 +68,13 @@ class UserController {
     const result = await this.changePasswordOperation.execute({
       user_id: req.params.user_id,
       ...req.body,
+    });
+    await this.auditService.log({
+      actor_id: req.params.user_id,
+      action: 'auth.password_change',
+      resource_type: 'user',
+      resource_id: req.params.user_id,
+      ip_address: req.ip,
     });
     res.status(200).json(result);
   }

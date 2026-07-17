@@ -1,10 +1,20 @@
 const Joi = require('joi');
 
+const passwordSchema = Joi.string()
+  .min(8)
+  .max(100)
+  .pattern(/^(?=.*\d)(?=.*[^a-zA-Z0-9])/)
+  .required()
+  .messages({
+    'string.min': 'A senha deve ter no mínimo 8 caracteres.',
+    'string.pattern.base': 'A senha deve conter pelo menos um número e um caractere especial.',
+  });
+
 module.exports = () => ({
   create: Joi.object({
     name: Joi.string().min(2).max(50).required(),
     email: Joi.string().email().required(),
-    password: Joi.string().min(6).max(100).required(),
+    password: passwordSchema,
   }),
 
   login: Joi.object({
@@ -19,7 +29,7 @@ module.exports = () => ({
 
   changePassword: Joi.object({
     currentPassword: Joi.string().required(),
-    newPassword: Joi.string().min(6).max(100).required(),
+    newPassword: passwordSchema,
   }),
 
   confirmEmail: Joi.object({
@@ -32,7 +42,7 @@ module.exports = () => ({
 
   confirmPasswordReset: Joi.object({
     token: Joi.string().required(),
-    newPassword: Joi.string().min(6).max(100).required(),
+    newPassword: passwordSchema,
   }),
 
   getUserById: Joi.object({

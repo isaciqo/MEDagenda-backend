@@ -1,4 +1,5 @@
 const { MailerSend, EmailParams, Sender, Recipient } = require('mailersend');
+const logger = require('../../lib/logger');
 
 class EmailService {
   constructor() {
@@ -8,14 +9,27 @@ class EmailService {
     this.fromName = process.env.EMAIL_FROM_NAME || 'MedAgenda';
   }
 
+  async _send(emailParams, context) {
+    try {
+      const result = await this.client.email.send(emailParams);
+      logger.info(`email.send: ${context} enviado com sucesso`);
+      return result;
+    } catch (err) {
+      const body = err.body ?? err.response?.body ?? err.response?.data ?? null;
+      logger.error(`email.send: falha ao enviar ${context}`, {
+        message: err.message,
+        status: err.statusCode ?? err.status ?? null,
+        body: body ? JSON.stringify(body) : null,
+      });
+      throw err;
+    }
+  }
+
   async sendConfirmationEmail({ email, name, token }) {
     const confirmUrl = `${this.frontendUrl}/confirm-email?token=${token}`;
-    const sender = new Sender(this.fromEmail, this.fromName);
-    const recipients = [new Recipient(email, name)];
-
     const emailParams = new EmailParams()
-      .setFrom(sender)
-      .setTo(recipients)
+      .setFrom(new Sender(this.fromEmail, this.fromName))
+      .setTo([new Recipient(email, name)])
       .setSubject('Confirme seu e-mail - MedAgenda')
       .setHtml(`
         <p>Ola, ${name}!</p>
@@ -24,17 +38,14 @@ class EmailService {
         <p>Este link expira em 1 hora.</p>
       `);
 
-    return this.client.email.send(emailParams);
+    return this._send(emailParams, `confirmacao para ${email}`);
   }
 
   async sendPasswordResetEmail({ email, name, token }) {
     const resetUrl = `${this.frontendUrl}/reset-password?token=${token}`;
-    const sender = new Sender(this.fromEmail, this.fromName);
-    const recipients = [new Recipient(email, name)];
-
     const emailParams = new EmailParams()
-      .setFrom(sender)
-      .setTo(recipients)
+      .setFrom(new Sender(this.fromEmail, this.fromName))
+      .setTo([new Recipient(email, name)])
       .setSubject('Redefinicao de senha - MedAgenda')
       .setHtml(`
         <p>Ola, ${name}!</p>
@@ -49,7 +60,7 @@ class EmailService {
         </p>
       `);
 
-    return this.client.email.send(emailParams);
+    return this._send(emailParams, `reset de senha para ${email}`);
   }
 }
 

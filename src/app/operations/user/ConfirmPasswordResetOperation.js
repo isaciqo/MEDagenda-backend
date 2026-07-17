@@ -1,21 +1,18 @@
+const crypto = require('crypto');
+const logger = require('../../../lib/logger');
+
 class ConfirmPasswordResetOperation {
-  constructor({ userRepository, tokenService, hashPasswordService }) {
+  constructor({ userRepository, hashPasswordService }) {
     this.userRepository = userRepository;
-    this.tokenService = tokenService;
     this.hashPasswordService = hashPasswordService;
   }
 
   async execute({ token, newPassword }) {
-    try {
-      this.tokenService.verify(token);
-    } catch {
-      const err = new Error('Token inválido ou expirado');
-      err.status = 400;
-      throw err;
-    }
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-    const user = await this.userRepository.findByResetToken(token);
+    const user = await this.userRepository.findByResetTokenHash(tokenHash);
     if (!user) {
+      logger.warn('reset-password: token inválido ou expirado');
       const err = new Error('Token inválido ou expirado');
       err.status = 400;
       throw err;
@@ -29,6 +26,7 @@ class ConfirmPasswordResetOperation {
       resetPasswordExpires: null,
     });
 
+    logger.info('reset-password: senha redefinida com sucesso', { user_id: user.user_id });
     return { message: 'Password reset successfully' };
   }
 }

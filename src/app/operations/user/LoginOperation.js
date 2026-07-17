@@ -1,3 +1,5 @@
+const logger = require('../../../lib/logger');
+
 class LoginOperation {
   constructor({ validateLoginService, tokenService }) {
     this.validateLoginService = validateLoginService;
@@ -5,11 +7,26 @@ class LoginOperation {
   }
 
   async execute({ email, password }) {
-    const user = await this.validateLoginService.validate(email, password);
+    logger.info('login: tentativa', { email });
 
-    const payload = { user_id: user.user_id, email: user.email, role: user.role };
+    let user;
+    try {
+      user = await this.validateLoginService.validate(email, password);
+    } catch (err) {
+      logger.warn('login: falhou', { email, reason: err.message });
+      throw err;
+    }
+
+    const payload = {
+      user_id: user.user_id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion ?? 0,
+    };
     const accessToken = this.tokenService.generate(payload);
-    const refreshToken = this.tokenService.generateTempToken(payload, '7d');
+    const refreshToken = this.tokenService.generateRefreshToken(payload);
+
+    logger.info('login: sucesso', { email, user_id: user.user_id });
 
     return { accessToken, refreshToken };
   }
