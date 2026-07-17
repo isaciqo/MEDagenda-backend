@@ -1,3 +1,5 @@
+const ALLOWED_FIELDS = new Set(['name', 'email']);
+
 class UpdateUserOperation {
   constructor({ userRepository }) {
     this.userRepository = userRepository;
@@ -9,7 +11,11 @@ class UpdateUserOperation {
       throw new Error('User not found');
     }
 
-    const updated = await this.userRepository.update(user_id, data);
+    const safeData = Object.fromEntries(
+      Object.entries(data).filter(([k]) => ALLOWED_FIELDS.has(k))
+    );
+
+    const updated = await this.userRepository.update(user_id, safeData);
     const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = updated.toObject();
     return safeUser;
   }

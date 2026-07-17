@@ -1,4 +1,5 @@
 const authMiddleware = require('../../middlewares/authMiddleware');
+const ownershipMiddleware = require('../../middlewares/ownershipMiddleware');
 const userSchema = require('./userSchemas')();
 
 module.exports = [
@@ -137,7 +138,7 @@ module.exports = [
     method: 'get',
     path: '/users/:user_id',
     handler: 'userController.getUser',
-    middlewares: [authMiddleware],
+    middlewares: [authMiddleware, ownershipMiddleware],
     validation: { params: userSchema.getUserById },
     swagger: {
       tags: ['Users'],
@@ -155,7 +156,7 @@ module.exports = [
     method: 'patch',
     path: '/users/:user_id',
     handler: 'userController.updateUser',
-    middlewares: [authMiddleware],
+    middlewares: [authMiddleware, ownershipMiddleware],
     validation: { params: userSchema.getUserById, body: userSchema.updateUser },
     swagger: {
       tags: ['Users'],
@@ -186,7 +187,7 @@ module.exports = [
     method: 'patch',
     path: '/users/:user_id/change-password',
     handler: 'userController.changePassword',
-    middlewares: [authMiddleware],
+    middlewares: [authMiddleware, ownershipMiddleware],
     validation: { params: userSchema.getUserById, body: userSchema.changePassword },
     swagger: {
       tags: ['Users'],
@@ -218,7 +219,7 @@ module.exports = [
     method: 'delete',
     path: '/users/:user_id',
     handler: 'userController.deleteUser',
-    middlewares: [authMiddleware],
+    middlewares: [authMiddleware, ownershipMiddleware],
     validation: { params: userSchema.getUserById },
     swagger: {
       tags: ['Users'],

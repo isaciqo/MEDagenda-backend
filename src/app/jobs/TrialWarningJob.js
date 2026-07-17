@@ -1,52 +1,60 @@
+const User = require('../../database/models/user/userModel');
 const logger = require('../../lib/logger');
 
 class TrialWarningJob {
-  constructor({ userRepository, emailService }) {
-    this.userRepository = userRepository;
-    this.emailService   = emailService;
+  constructor({ emailService }) {
+    this.emailService = emailService;
   }
 
   async run() {
     logger.info('TrialWarningJob: iniciando verificação de trials expirando');
 
-    const users = await this.userRepository.findExpiringTrials(7);
-
-    if (users.length === 0) {
-      logger.info('TrialWarningJob: nenhum usuário a notificar');
-      return { notified: 0, errors: 0 };
-    }
-
-    logger.info(`TrialWarningJob: ${users.length} usuário(s) a notificar`);
+    const base       = (process.env.FRONTEND_URL || 'http://localhost:8080').split(',')[0].trim();
+    const upgradeUrl = `${base}/configuracoes`;
 
     let notified = 0;
     let errors   = 0;
 
-    for (const user of users) {
+    // Processa um usuário de cada vez com findOneAndUpdate atômico.
+    // Garante que múltiplas instâncias do servidor não enviem emails duplicados:
+    // apenas o processo que executar o update primeiro "reserva" o usuário.
+    while (true) {
+      const now      = new Date();
+      const deadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const user = await User.findOneAndUpdate(
+        {
+          plan: 'trial',
+          isConfirmed: true,
+          trialExpiresAt:    { $gte: now, $lte: deadline },
+          trialWarningSentAt: null,
+        },
+        { $set: { trialWarningSentAt: now } },
+        { new: false } // retorna o documento ANTES do update para ter os dados originais
+      );
+
+      if (!user) break; // nenhum usuário restante para processar
+
       try {
-        const now      = new Date();
-        const expires  = new Date(user.trialExpiresAt);
-        const msLeft   = expires - now;
+        const msLeft   = new Date(user.trialExpiresAt) - now;
         const daysLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
 
-        const upgradeUrl = `${process.env.FRONTEND_URL || 'http://localhost:8080'}/configuracoes`;
-
         await this.emailService.sendTrialExpiryWarning({
-          email:      user.email,
-          name:       user.name,
+          email: user.email,
+          name:  user.name,
           daysLeft,
           upgradeUrl,
-        });
-
-        await this.userRepository.update(user.user_id, {
-          trialWarningSentAt: now,
         });
 
         notified++;
         logger.info(`TrialWarningJob: aviso enviado para ${user.email} (${daysLeft} dia(s) restantes)`);
       } catch (err) {
         errors++;
+        // Rollback da marcação para que o cron tente novamente amanhã
+        await User.updateOne({ _id: user._id }, { $set: { trialWarningSentAt: null } });
         logger.error(`TrialWarningJob: falha ao notificar ${user.email}`, {
           message: err.message,
+          stack:   err.stack,
         });
       }
     }

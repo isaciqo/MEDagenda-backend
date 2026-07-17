@@ -18,11 +18,11 @@ class EmailConfirmationOperation {
     }
 
     if (user.isConfirmed) {
-      return { message: 'Email already confirmed' };
+      return { message: 'Email already confirmed', user_id: user.user_id };
     }
 
     await this.userRepository.update(user.user_id, { isConfirmed: true });
-    return { message: 'Email confirmed successfully' };
+    return { message: 'Email confirmed successfully', user_id: user.user_id };
   }
 }
 

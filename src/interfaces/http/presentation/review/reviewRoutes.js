@@ -1,4 +1,5 @@
 const authMiddleware = require('../../middlewares/authMiddleware');
+const planFeatureMiddleware = require('../../middlewares/planFeatureMiddleware');
 const reviewSchema = require('./reviewSchemas')();
 
 module.exports = [
@@ -6,7 +7,7 @@ module.exports = [
     method: 'get',
     path: '/reviews',
     handler: 'reviewController.list',
-    middlewares: [authMiddleware],
+    middlewares: [authMiddleware, planFeatureMiddleware('avaliacoes')],
     validation: {},
     swagger: {
       tags: ['Reviews'],

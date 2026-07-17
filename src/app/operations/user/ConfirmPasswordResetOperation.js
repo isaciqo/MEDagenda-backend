@@ -27,7 +27,7 @@ class ConfirmPasswordResetOperation {
     });
 
     logger.info('reset-password: senha redefinida com sucesso', { user_id: user.user_id });
-    return { message: 'Password reset successfully' };
+    return { message: 'Password reset successfully', user_id: user.user_id };
   }
 }
 

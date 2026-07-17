@@ -36,9 +36,10 @@ class UserController {
   async confirmEmail(req, res) {
     const result = await this.emailConfirmationOperation.execute(req.params.token);
     await this.auditService.log({
-      actor_id: req.params.token,
+      actor_id: result.user_id,
       action: 'auth.email_confirmed',
       resource_type: 'user',
+      resource_id: result.user_id,
       ip_address: req.ip,
     });
     res.status(200).json(result);

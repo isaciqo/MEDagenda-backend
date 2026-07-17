@@ -1,4 +1,5 @@
 const authMiddleware = require('../../middlewares/authMiddleware');
+const subscriptionSchema = require('./subscriptionSchemas')();
 
 module.exports = [
   {
@@ -6,7 +7,7 @@ module.exports = [
     path: '/subscriptions/checkout',
     handler: 'subscriptionController.checkout',
     middlewares: [authMiddleware],
-    validation: {},
+    validation: { body: subscriptionSchema.checkout },
   },
   {
     method: 'post',

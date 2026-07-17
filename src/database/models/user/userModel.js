@@ -45,4 +45,6 @@ const userSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+userSchema.index({ plan: 1, trialExpiresAt: 1, trialWarningSentAt: 1, isConfirmed: 1 });
+
 module.exports = mongoose.model('User', userSchema);

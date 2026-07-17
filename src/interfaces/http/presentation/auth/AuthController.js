@@ -52,11 +52,12 @@ class AuthController {
   }
 
   async resetPassword(req, res) {
-    await this.confirmPasswordResetOperation.execute(req.body);
+    const result = await this.confirmPasswordResetOperation.execute(req.body);
     await this.auditService.log({
-      actor_id: req.body.email || 'unknown',
+      actor_id: result.user_id,
       action: 'auth.password_reset_confirm',
       resource_type: 'user',
+      resource_id: result.user_id,
       ip_address: req.ip,
     });
     res.status(204).send();

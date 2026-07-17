@@ -8,7 +8,17 @@ class GetUserOperation {
     if (!user) {
       throw new Error('User not found');
     }
-    const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user.toObject();
+
+    const {
+      _id, __v,
+      password, resetPasswordToken, resetPasswordExpires,
+      tokenVersion, loginAttempts, lockUntil,
+      trialWarningSentAt,
+      stripeCustomerId, stripeSubscriptionId,
+      googleId,
+      ...safeUser
+    } = user.toObject();
+
     return safeUser;
   }
 }

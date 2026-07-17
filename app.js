@@ -63,9 +63,18 @@ const publicLimiter = rateLimit({
   message: { error: 'Muitas requisições. Tente novamente em alguns instantes.' },
 });
 
+const checkoutLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas tentativas de checkout. Aguarde antes de tentar novamente.' },
+});
+
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
 app.use('/api/v1/auth/forgot-password', authLimiter);
+app.use('/api/v1/subscriptions/checkout', checkoutLimiter);
 app.use('/api/v1/public/', publicLimiter);
 
 setupSwagger(app);
@@ -79,7 +88,7 @@ connectDatabase()
       logger.info(`Swagger docs: http://localhost:${PORT}/api-docs`);
     });
 
-    // Roda todos os dias às 09:00 (hora do servidor)
+    // Roda todos os dias às 09:00 horário de Brasília
     cron.schedule('0 9 * * *', async () => {
       try {
         const job = container.resolve('trialWarningJob');
@@ -87,8 +96,8 @@ connectDatabase()
       } catch (err) {
         logger.error('TrialWarningJob: erro ao executar cron', { message: err.message });
       }
-    });
-    logger.info('Cron: TrialWarningJob agendado para 09:00 diariamente');
+    }, { timezone: 'America/Sao_Paulo' });
+    logger.info('Cron: TrialWarningJob agendado para 09:00 BRT diariamente');
   })
   .catch((err) => {
     logger.error('Failed to connect to database', { message: err.message, stack: err.stack });
