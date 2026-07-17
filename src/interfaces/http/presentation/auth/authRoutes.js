@@ -135,6 +135,33 @@ module.exports = [
   },
   {
     method: 'post',
+    path: '/auth/google',
+    handler: 'authController.googleAuth',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Auth'],
+      summary: 'Login / registro via Google OAuth',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['credential'],
+              properties: { credential: { type: 'string', description: 'Google ID token (JWT)' } },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: 'Returns accessToken and refreshToken' },
+        401: { description: 'Invalid Google credential' },
+      },
+    },
+  },
+  {
+    method: 'post',
     path: '/auth/logout',
     handler: 'authController.logout',
     middlewares: [authMiddleware],
