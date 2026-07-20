@@ -9,7 +9,7 @@ class ChangePasswordOperation {
   async execute({ user_id, currentPassword, newPassword }) {
     const user = await this.userRepository.findById(user_id);
     if (!user) {
-      const err = new Error('User not found');
+      const err = new Error('Usuário não encontrado');
       err.statusCode = 404;
       throw err;
     }
@@ -17,7 +17,7 @@ class ChangePasswordOperation {
     const isValid = await this.hashPasswordService.compare(currentPassword, user.password);
     if (!isValid) {
       logger.warn('change-password: senha atual incorreta', { user_id });
-      const err = new Error('Current password is incorrect');
+      const err = new Error('Senha atual incorreta');
       err.statusCode = 400;
       throw err;
     }
@@ -25,8 +25,11 @@ class ChangePasswordOperation {
     const hashedPassword = await this.hashPasswordService.hash(newPassword);
     await this.userRepository.update(user_id, { password: hashedPassword });
 
-    logger.info('change-password: senha alterada com sucesso', { user_id });
-    return { message: 'Password changed successfully' };
+    // AU03: invalida todas as sessões abertas em outros dispositivos
+    await this.userRepository.incrementTokenVersion(user_id);
+
+    logger.info('change-password: senha alterada, sessões anteriores invalidadas', { user_id });
+    return { message: 'Senha alterada com sucesso' };
   }
 }
 

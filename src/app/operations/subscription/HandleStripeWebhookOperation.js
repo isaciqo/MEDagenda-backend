@@ -1,5 +1,5 @@
 const ProcessedStripeEvent = require('../../../database/models/ProcessedStripeEvent');
-const logger = require('../../lib/logger');
+const logger = require('../../../lib/logger');
 
 class HandleStripeWebhookOperation {
   constructor({ stripeService, userRepository }) {
@@ -47,6 +47,9 @@ class HandleStripeWebhookOperation {
     const userId = session.metadata?.user_id;
     if (!userId) return;
 
+    // S03: checkout de pagamento único não tem subscription — ignorar silenciosamente
+    if (!session.subscription) return;
+
     const sub      = await this.stripeService.stripe.subscriptions.retrieve(session.subscription);
     const priceId  = sub.items.data[0]?.price?.id;
     const plan     = this.stripeService.getPlanFromPriceId(priceId) || 'profissional';
@@ -84,9 +87,14 @@ class HandleStripeWebhookOperation {
     const user = await this.userRepository.findByStripeCustomerId(sub.customer);
     if (!user) return;
 
+    // S02: usar current_period_end para garantir acesso até fim do período pago
+    const periodEnd = sub.current_period_end
+      ? new Date(sub.current_period_end * 1000)
+      : new Date();
+
     await this.userRepository.update(user.user_id, {
       stripeSubscriptionId: null,
-      planExpiresAt: new Date(),
+      planExpiresAt: periodEnd,
     });
 
     logger.info(`Webhook: customer.subscription.deleted — user ${user.user_id}`);

@@ -45,6 +45,8 @@ class AppointmentController {
       doctor_id: req.user.user_id,
       date: req.query.date,
       status: req.query.status,
+      from: req.query.from,
+      to: req.query.to,
     });
     res.status(200).json(result);
   }
@@ -99,7 +101,7 @@ class AppointmentController {
   }
 
   async generateLinks(req, res) {
-    const result = await this.generateAppointmentLinksOperation.execute(req.params.id);
+    const result = await this.generateAppointmentLinksOperation.execute(req.params.id, req.user.user_id);
     res.status(200).json(result);
   }
 }

@@ -5,9 +5,15 @@ class AppointmentRepository {
     return Appointment.findOne({ appointment_id });
   }
 
-  async findAll({ doctor_id, date, status }) {
+  async findAll({ doctor_id, date, status, from, to }) {
     const filter = { doctor_id };
-    if (date) filter.date = date;
+    if (date) {
+      filter.date = date;
+    } else if (from || to) {
+      filter.date = {};
+      if (from) filter.date.$gte = from;
+      if (to) filter.date.$lte = to;
+    }
     if (status) filter.status = status;
     return Appointment.find(filter).sort({ date: 1, time: 1 });
   }
@@ -49,6 +55,21 @@ class AppointmentRepository {
 
   async deleteByPatientId(patient_id) {
     return Appointment.deleteMany({ 'patient.id': patient_id });
+  }
+
+  async cancelReturnAppointments(appointment_id) {
+    return Appointment.updateMany(
+      { returnOf: appointment_id, status: { $ne: 'cancelado' } },
+      { $set: { status: 'cancelado' } }
+    );
+  }
+
+  async deleteByReturnOf(appointment_id) {
+    return Appointment.deleteMany({ returnOf: appointment_id });
+  }
+
+  async findByDoctorDateTime(doctor_id, date, time) {
+    return Appointment.findOne({ doctor_id, date, time, status: { $ne: 'cancelado' } });
   }
 
   async countByDoctorAndMonth(doctor_id, year, month) {

@@ -3,8 +3,8 @@ class ListAppointmentsOperation {
     this.appointmentRepository = appointmentRepository;
   }
 
-  async execute({ doctor_id, date, status }) {
-    const appointments = await this.appointmentRepository.findAll({ doctor_id, date, status });
+  async execute({ doctor_id, date, status, from, to }) {
+    const appointments = await this.appointmentRepository.findAll({ doctor_id, date, status, from, to });
     return appointments.map(a => ({
       id: a.appointment_id,
       patient: a.patient,

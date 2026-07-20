@@ -13,6 +13,10 @@ class PatientRepository {
     return Patient.findOne({ doctor_id, phone });
   }
 
+  async findByExactName(doctor_id, name) {
+    return Patient.findOne({ doctor_id, name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+  }
+
   async searchByName(doctor_id, name) {
     return Patient.find({
       doctor_id,
@@ -21,7 +25,7 @@ class PatientRepository {
   }
 
   async countByName(doctor_id, name) {
-    return Patient.countDocuments({ doctor_id, name });
+    return Patient.countDocuments({ doctor_id, name: { $regex: new RegExp(`^${name}$`, 'i') } });
   }
 
   async create(data) {

@@ -5,11 +5,18 @@ class ExportPatientDataOperation {
     this.reviewRepository = reviewRepository;
   }
 
-  async execute(patient_id) {
+  async execute(patient_id, doctor_id) {
     const patient = await this.patientRepository.findById(patient_id);
     if (!patient) {
       const error = new Error('Cliente não encontrado');
       error.statusCode = 404;
+      throw error;
+    }
+
+    // C01: verificação de dono (IDOR fix)
+    if (patient.doctor_id !== doctor_id) {
+      const error = new Error('Acesso negado');
+      error.statusCode = 403;
       throw error;
     }
 

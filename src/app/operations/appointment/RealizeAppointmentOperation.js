@@ -9,7 +9,7 @@ class RealizeAppointmentOperation {
     const existing = await this.appointmentRepository.findById(appointment_id);
     if (!existing) {
       logger.warn('appointment.realize: consulta não encontrada', { appointment_id, doctor_id });
-      const error = new Error('Appointment not found');
+      const error = new Error('Consulta não encontrada');
       error.statusCode = 404;
       throw error;
     }
@@ -18,6 +18,13 @@ class RealizeAppointmentOperation {
       logger.warn('appointment.realize: acesso negado (IDOR)', { appointment_id, doctor_id });
       const error = new Error('Acesso negado');
       error.statusCode = 403;
+      throw error;
+    }
+
+    // A04: paidValue não pode ser negativo
+    if (paidValue !== undefined && paidValue < 0) {
+      const error = new Error('O valor pago não pode ser negativo');
+      error.statusCode = 400;
       throw error;
     }
 

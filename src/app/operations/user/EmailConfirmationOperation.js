@@ -1,7 +1,10 @@
+const logger = require('../../../lib/logger');
+
 class EmailConfirmationOperation {
-  constructor({ userRepository, tokenService }) {
+  constructor({ userRepository, tokenService, emailService }) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
+    this.emailService = emailService;
   }
 
   async execute(token) {
@@ -9,20 +12,33 @@ class EmailConfirmationOperation {
     try {
       decoded = this.tokenService.verify(token);
     } catch {
-      throw new Error('Invalid or expired confirmation token');
+      const err = new Error('Token de confirmação inválido ou expirado');
+      err.statusCode = 400;
+      throw err;
     }
 
     const user = await this.userRepository.findByEmail(decoded.email);
     if (!user) {
-      throw new Error('User not found');
+      const err = new Error('Usuário não encontrado');
+      err.statusCode = 404;
+      throw err;
     }
 
     if (user.isConfirmed) {
-      return { message: 'Email already confirmed', user_id: user.user_id };
+      return { message: 'E-mail já confirmado', user_id: user.user_id };
     }
 
     await this.userRepository.update(user.user_id, { isConfirmed: true });
-    return { message: 'Email confirmed successfully', user_id: user.user_id };
+    logger.info('email-confirmation: conta confirmada', { email: user.email });
+
+    // AU04: e-mail de boas-vindas após confirmação
+    try {
+      await this.emailService.sendWelcomeEmail({ email: user.email, name: user.name });
+    } catch (err) {
+      logger.error('email-confirmation: falha ao enviar e-mail de boas-vindas', { email: user.email, error: err.message });
+    }
+
+    return { message: 'E-mail confirmado com sucesso', user_id: user.user_id };
   }
 }
 

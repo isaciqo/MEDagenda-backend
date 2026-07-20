@@ -3,15 +3,23 @@ class GetFinancialSummaryOperation {
     this.appointmentRepository = appointmentRepository;
   }
 
-  async execute({ doctor_id, view = 'mensal', month }) {
-    const { from, to, targetMonth } = this._getRange(view, month);
+  async execute({ doctor_id, view = 'mensal', month, year }) {
+    const { from, to, targetMonth } = this._getRange(view, month, year);
     const appointments = await this.appointmentRepository.findByDoctorAndDateRange(doctor_id, from, to);
     const realized = appointments.filter(a => a.status === 'realizado');
 
-    const totalBilled    = realized.reduce((s, a) => s + (a.estimatedValue || 0), 0);
-    const totalReceived  = realized.reduce((s, a) => s + (a.paidValue || 0), 0);
-    const totalPending   = totalBilled - totalReceived;
-    const averageTicket  = realized.length > 0 ? Math.round(totalReceived / realized.length) : 0;
+    const totalBilled   = realized.reduce((s, a) => s + (a.estimatedValue || 0), 0);
+    const totalReceived = realized.reduce((s, a) => s + (a.paidValue || 0), 0);
+
+    // F01: pendente nunca negativo (paidValue pode superar estimatedValue)
+    const totalPending  = Math.max(0, totalBilled - totalReceived);
+
+    // F03: ticket médio exclui consultas com paidValue=0 (retornos gratuitos, etc.)
+    const paidAppointments = realized.filter(a => (a.paidValue || 0) > 0);
+    const averageTicket = paidAppointments.length > 0
+      ? Math.round(paidAppointments.reduce((s, a) => s + a.paidValue, 0) / paidAppointments.length)
+      : 0;
+
     const presencialCount = realized.filter(a => a.type === 'presencial').length;
     const presencialPercentage = realized.length > 0
       ? Math.round((presencialCount / realized.length) * 100) : 0;
@@ -34,25 +42,27 @@ class GetFinancialSummaryOperation {
     return { totalBilled, totalReceived, totalPending, averageTicket, presencialPercentage, chartData, entries };
   }
 
-  _getRange(view, month) {
+  // F04: aceita year para visão anual
+  _getRange(view, month, year) {
     const now = new Date();
-    const year = now.getFullYear();
+    const currentYear = now.getFullYear();
 
     if (view === 'anual') {
+      const targetYear = year ? parseInt(year, 10) : currentYear;
       return {
-        from: `${year}-01-01`,
-        to: `${year}-12-31`,
+        from: `${targetYear}-01-01`,
+        to:   `${targetYear}-12-31`,
         targetMonth: null,
       };
     }
 
     // mensal
-    const targetMonth = month || `${year}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const targetMonth = month || `${currentYear}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const [y, m] = targetMonth.split('-').map(Number);
     const lastDay = new Date(y, m, 0).getDate();
     return {
       from: `${targetMonth}-01`,
-      to: `${targetMonth}-${String(lastDay).padStart(2, '0')}`,
+      to:   `${targetMonth}-${String(lastDay).padStart(2, '0')}`,
       targetMonth,
     };
   }

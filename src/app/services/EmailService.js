@@ -132,6 +132,113 @@ class EmailService {
     return this._send(emailParams, `aviso de trial expirando para ${email}`);
   }
 
+  async sendWelcomeEmail({ email, name }) {
+    const loginUrl = `${this.frontendUrl}/login`;
+    const emailParams = new EmailParams()
+      .setFrom(new Sender(this.fromEmail, this.fromName))
+      .setTo([new Recipient(email, name)])
+      .setSubject('Boas-vindas ao MEDagenda! Seu trial de 30 dias começou.')
+      .setHtml(`
+        <p>Olá, ${name}!</p>
+        <p>Sua conta foi confirmada com sucesso. Seu período de teste gratuito de 30 dias está ativo!</p>
+        <p>Organize sua agenda, cadastre pacientes e experimente todas as funcionalidades sem custo.</p>
+        <p>
+          <a href="${loginUrl}" style="display:inline-block;padding:12px 24px;background-color:#2563eb;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">
+            Acessar o MEDagenda
+          </a>
+        </p>
+        <p style="color:#6b7280;font-size:13px;">Em caso de dúvidas, responda este e-mail.</p>
+      `);
+
+    return this._send(emailParams, `boas-vindas para ${email}`);
+  }
+
+  async sendSupportEmail({ replyTo, userName, userEmail, userId, userPlan, tipoSolicitacao, assunto, mensagem, currentUrl, userAgent, timestamp }) {
+    const supportEmail = process.env.SUPPORT_EMAIL || this.fromEmail;
+    const emailParams = new EmailParams()
+      .setFrom(new Sender(this.fromEmail, this.fromName))
+      .setTo([new Recipient(supportEmail, 'Suporte MedAgenda')])
+      .setReplyTo(new Sender(replyTo, userName))
+      .setSubject(`[${tipoSolicitacao}] ${assunto}`)
+      .setHtml(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+        <body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 20px;">
+            <tr><td align="center">
+              <table width="100%" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+
+                <!-- Header -->
+                <tr>
+                  <td style="background:#2563eb;padding:24px 40px;">
+                    <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;">MedAgenda — Suporte</p>
+                    <p style="margin:4px 0 0;font-size:13px;color:#93c5fd;">${tipoSolicitacao}</p>
+                  </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                  <td style="padding:32px 40px;">
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Assunto</p>
+                    <p style="margin:0 0 24px;font-size:16px;font-weight:600;color:#111827;">${assunto}</p>
+
+                    <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Mensagem</p>
+                    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:28px;">
+                      <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${mensagem}</p>
+                    </div>
+
+                    <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Contexto do usuário</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:12px;">
+                      <tr style="background:#f9fafb;">
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;width:100px;">Nome</td>
+                        <td style="padding:10px 16px;color:#374151;">${userName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;border-top:1px solid #f3f4f6;">E-mail</td>
+                        <td style="padding:10px 16px;color:#374151;border-top:1px solid #f3f4f6;">${userEmail}</td>
+                      </tr>
+                      <tr style="background:#f9fafb;">
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;border-top:1px solid #f3f4f6;">User ID</td>
+                        <td style="padding:10px 16px;color:#374151;border-top:1px solid #f3f4f6;font-family:monospace;">${userId}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;border-top:1px solid #f3f4f6;">Plano</td>
+                        <td style="padding:10px 16px;color:#374151;border-top:1px solid #f3f4f6;">${userPlan}</td>
+                      </tr>
+                      <tr style="background:#f9fafb;">
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;border-top:1px solid #f3f4f6;">URL</td>
+                        <td style="padding:10px 16px;color:#374151;border-top:1px solid #f3f4f6;word-break:break-all;">${currentUrl}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;border-top:1px solid #f3f4f6;">Data</td>
+                        <td style="padding:10px 16px;color:#374151;border-top:1px solid #f3f4f6;">${timestamp}</td>
+                      </tr>
+                      <tr style="background:#f9fafb;">
+                        <td style="padding:10px 16px;font-weight:600;color:#6b7280;border-top:1px solid #f3f4f6;vertical-align:top;">User-Agent</td>
+                        <td style="padding:10px 16px;color:#374151;border-top:1px solid #f3f4f6;word-break:break-all;">${userAgent}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="padding:16px 40px;border-top:1px solid #f3f4f6;text-align:center;">
+                    <p style="margin:0;font-size:11px;color:#9ca3af;">Responda este e-mail para contatar o usuário diretamente.</p>
+                  </td>
+                </tr>
+
+              </table>
+            </td></tr>
+          </table>
+        </body>
+        </html>
+      `);
+
+    return this._send(emailParams, `suporte de ${userEmail}`);
+  }
+
   async sendPasswordResetEmail({ email, name, token }) {
     const resetUrl = `${this.frontendUrl}/reset-password?token=${token}`;
     const emailParams = new EmailParams()

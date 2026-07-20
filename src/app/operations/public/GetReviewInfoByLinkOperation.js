@@ -12,14 +12,27 @@ class GetReviewInfoByLinkOperation {
       throw error;
     }
 
-    const existing = await this.reviewRepository.findByLinkId(reviewLinkId);
-    if (existing) {
-      const error = new Error('Você já enviou um feedback para esta consulta');
-      error.statusCode = 409;
+    // V01: verificar expiração do link
+    if (appointment.reviewLinkExpires && appointment.reviewLinkExpires < new Date()) {
+      const error = new Error('Link de avaliação expirado');
+      error.statusCode = 400;
       throw error;
     }
 
+    // P06: se já avaliado, retornar 200 com flag em vez de 409
+    const existing = await this.reviewRepository.findByLinkId(reviewLinkId);
+    if (existing) {
+      return {
+        alreadyReviewed: true,
+        appointmentId: appointment.appointment_id,
+        patientName: appointment.patient.name,
+        date: appointment.date,
+        time: appointment.time,
+      };
+    }
+
     return {
+      alreadyReviewed: false,
       appointmentId: appointment.appointment_id,
       patientName: appointment.patient.name,
       date: appointment.date,

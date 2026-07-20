@@ -55,7 +55,8 @@ class UserRepository {
 
   async lockAccount(user_id) {
     const lockUntil = new Date(Date.now() + 15 * 60 * 1000);
-    return User.findOneAndUpdate({ user_id }, { loginAttempts: 5, lockUntil }, { new: true });
+    // loginAttempts: 0 para que, após o bloqueio expirar, o usuário tenha 5 tentativas novas
+    return User.findOneAndUpdate({ user_id }, { loginAttempts: 0, lockUntil }, { new: true });
   }
 
   async resetLoginAttempts(user_id) {

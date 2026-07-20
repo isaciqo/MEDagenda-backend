@@ -27,6 +27,8 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
   location: { type: String, default: '' },
   activeReviewLinkId: { type: String, default: null },
+  reviewLinkExpires: { type: Date, default: null },
+  rescheduleCount: { type: Number, default: 0 },
   confirmToken: { type: String, default: null },
   confirmTokenExpires: { type: Date, default: null },
   expiresAt: { type: Date, default: null },

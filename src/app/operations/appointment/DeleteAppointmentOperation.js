@@ -21,6 +21,12 @@ class DeleteAppointmentOperation {
       throw error;
     }
 
+    // Remove retornos vinculados antes de deletar a consulta principal
+    const { deletedCount } = await this.appointmentRepository.deleteByReturnOf(appointment_id);
+    if (deletedCount > 0) {
+      logger.info('appointment.delete: retorno(s) vinculado(s) removido(s)', { appointment_id, count: deletedCount });
+    }
+
     await this.appointmentRepository.delete(appointment_id);
 
     logger.info('appointment.delete: consulta removida', { appointment_id, doctor_id });

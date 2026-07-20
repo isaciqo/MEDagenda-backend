@@ -35,8 +35,23 @@ class RescheduleByTokenOperation {
       throw error;
     }
 
-    await this.appointmentRepository.update(payload.appointment_id, { status: 'cancelado' });
+    // P01: não permite reagendar para data passada
+    const today = new Date().toISOString().split('T')[0];
+    if (date < today) {
+      const error = new Error('A data do reagendamento deve ser futura');
+      error.statusCode = 400;
+      throw error;
+    }
 
+    // P02: verifica conflito de horário no novo slot
+    const conflict = await this.appointmentRepository.findByDoctorDateTime(old.doctor_id, date, time);
+    if (conflict) {
+      const error = new Error('Já existe uma consulta agendada para esse horário');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    // P03: cria nova consulta ANTES de cancelar a antiga — evita perda em caso de falha
     const newAppointment = await this.appointmentRepository.create({
       appointment_id: uuidv4(),
       doctor_id: old.doctor_id,
@@ -47,9 +62,14 @@ class RescheduleByTokenOperation {
       estimatedValue: old.estimatedValue,
       notes: old.notes,
       status: 'agendado',
+      rescheduleCount: (old.rescheduleCount || 0) + 1, // RN06: propaga contador ao novo
     });
 
+    // Cancela antiga somente depois da nova criada com sucesso
+    await this.appointmentRepository.update(payload.appointment_id, { status: 'cancelado' });
+
     return {
+      id: newAppointment.appointment_id, // P04: retorna ID para médico gerar novos links
       patientName: newAppointment.patient.name,
       date: newAppointment.date,
       time: newAppointment.time,

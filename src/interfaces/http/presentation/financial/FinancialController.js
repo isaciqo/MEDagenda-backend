@@ -8,6 +8,7 @@ class FinancialController {
       doctor_id: req.user.user_id,
       view:  req.query.view,
       month: req.query.month,
+      year:  req.query.year,
     });
     res.status(200).json(result);
   }

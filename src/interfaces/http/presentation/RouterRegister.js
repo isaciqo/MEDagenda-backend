@@ -8,6 +8,7 @@ const availabilityRoutes = require('./availability/availabilityRoutes');
 const settingsRoutes = require('./settings/settingsRoutes');
 const patientRoutes = require('./patient/patientRoutes');
 const subscriptionRoutes = require('./subscription/subscriptionRoutes');
+const supportRoutes = require('./support/supportRoutes');
 const validationMiddleware = require('../middlewares/validationMiddleware');
 
 const API_PREFIX = '/api/v1';
@@ -38,6 +39,7 @@ const routerRegister = (app, container) => {
   registerRoutes(app, settingsRoutes, container);
   registerRoutes(app, patientRoutes, container);
   registerRoutes(app, subscriptionRoutes, container);
+  registerRoutes(app, supportRoutes, container);
 };
 
 module.exports = routerRegister;

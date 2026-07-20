@@ -30,6 +30,13 @@ class CreateAppointmentOperation {
     }
     // ──────────────────────────────────────────────────────────────
 
+    // A11: retorno não pode ser anterior à consulta principal
+    if (returnDate && returnDate < date) {
+      const error = new Error('A data do retorno deve ser igual ou posterior à data da consulta');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
 
     const appointmentId = uuidv4();
@@ -103,6 +110,10 @@ class CreateAppointmentOperation {
       const byPhone = await this.patientRepository.findByPhone(doctor_id, patientPhone);
       if (byPhone) return byPhone;
     }
+
+    // A12: busca case-insensitive para evitar duplicatas por variação de maiúsculas
+    const byName = await this.patientRepository.findByExactName(doctor_id, patientName);
+    if (byName) return byName;
 
     const sameNameCount = await this.patientRepository.countByName(doctor_id, patientName);
     const displayName = sameNameCount === 0 ? patientName : `${patientName} (paciente ${sameNameCount + 1})`;

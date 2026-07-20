@@ -18,10 +18,22 @@ const whatsappTemplateSchema = Joi.string().custom((value, helpers) => {
   'whatsappTemplate.invalidVar': `Variável(is) inválida(s) no template: {{#invalidDisplay}}. Use apenas: ${ALLOWED_DISPLAY}.`,
 });
 
+// CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end
+const timeSchema = Joi.string()
+  .pattern(/^([0-1]\d|2[0-3]):[0-5]\d$/)
+  .messages({ 'string.pattern.base': 'Horário deve estar no formato HH:MM com valores válidos (00:00–23:59)' });
+
 const daySchema = Joi.object({
-  start: Joi.string().pattern(/^\d{2}:\d{2}$/),
-  end: Joi.string().pattern(/^\d{2}:\d{2}$/),
-  enabled: Joi.boolean(),
+  start: timeSchema.optional(),
+  end: timeSchema.optional(),
+  enabled: Joi.boolean().optional(),
+}).custom((value, helpers) => {
+  if (value.start && value.end && value.start >= value.end) {
+    return helpers.error('day.range');
+  }
+  return value;
+}).messages({
+  'day.range': 'O horário de início deve ser anterior ao horário de término',
 });
 
 module.exports = () => ({

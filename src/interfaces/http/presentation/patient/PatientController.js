@@ -63,7 +63,7 @@ class PatientController {
   }
 
   async exportData(req, res) {
-    const result = await this.exportPatientDataOperation.execute(req.params.patient_id);
+    const result = await this.exportPatientDataOperation.execute(req.params.patient_id, req.user.user_id);
     await this.auditService.log({
       actor_id: req.user.user_id,
       action: 'patient.export',
