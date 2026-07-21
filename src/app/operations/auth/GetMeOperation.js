@@ -27,6 +27,7 @@ class GetMeOperation {
       specialty: user.specialty,
       photoUrl: user.photoUrl,
       createdAt: user.createdAt,
+      onboardingCompleted: user.onboardingCompleted ?? false,
       ...this.planService.buildPlanInfo(user, monthlyCount),
     };
   }

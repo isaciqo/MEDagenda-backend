@@ -1,4 +1,5 @@
 const authRoutes = require('./auth/authRoutes');
+const userRoutes = require('./user/userRoutes');
 const publicRoutes = require('./public/publicRoutes');
 const appointmentRoutes = require('./appointment/appointmentRoutes');
 const financialRoutes = require('./financial/financialRoutes');
@@ -30,6 +31,7 @@ const registerRoutes = (app, routes, container) => {
 
 const routerRegister = (app, container) => {
   registerRoutes(app, authRoutes, container);
+  registerRoutes(app, userRoutes, container);
   registerRoutes(app, publicRoutes, container);
   registerRoutes(app, appointmentRoutes, container);
   registerRoutes(app, financialRoutes, container);

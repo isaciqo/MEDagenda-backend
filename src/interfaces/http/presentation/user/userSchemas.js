@@ -25,6 +25,7 @@ module.exports = () => ({
   updateUser: Joi.object({
     name: Joi.string().min(2).max(50),
     email: Joi.string().email(),
+    onboardingCompleted: Joi.boolean(),
   }).min(1),
 
   changePassword: Joi.object({

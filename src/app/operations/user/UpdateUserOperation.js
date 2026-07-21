@@ -1,4 +1,4 @@
-const ALLOWED_FIELDS = new Set(['name', 'email']);
+const ALLOWED_FIELDS = new Set(['name', 'email', 'onboardingCompleted']);
 
 class UpdateUserOperation {
   constructor({ userRepository }) {

@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
   photoUrl: { type: String, default: null },
   whatsappTemplate: { type: String, default: 'Olá {nome}, confirmando sua consulta em {data} às {hora} com {medico}. Confirma sua presenca? {link}' },
   defaultDuration: { type: Number, default: 30 },
+  defaultConsultationValue: { type: Number, default: 0 },
   tokenVersion: { type: Number, default: 0 },
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date, default: null },
@@ -30,6 +31,7 @@ const userSchema = new mongoose.Schema({
   stripeSubscriptionId: { type: String, default: null },
   googleId: { type: String, default: null, sparse: true },
   trialWarningSentAt: { type: Date, default: null },
+  onboardingCompleted: { type: Boolean, default: false },
   schedule: {
     type: Map,
     of: scheduleSchema,

@@ -18,6 +18,7 @@ class UpdateSettingsOperation {
     if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
     if (data.whatsappTemplate !== undefined) updateData.whatsappTemplate = data.whatsappTemplate;
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
+    if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
     if (data.schedule !== undefined) updateData.schedule = data.schedule;
 
     const updated = await this.userRepository.update(user_id, updateData);
@@ -33,6 +34,7 @@ class UpdateSettingsOperation {
       photoUrl: updated.photoUrl,
       whatsappTemplate: updated.whatsappTemplate,
       defaultDuration: updated.defaultDuration,
+      defaultConsultationValue: updated.defaultConsultationValue ?? 0,
       schedule,
     };
   }

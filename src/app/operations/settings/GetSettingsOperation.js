@@ -22,6 +22,7 @@ class GetSettingsOperation {
       photoUrl: user.photoUrl,
       whatsappTemplate: user.whatsappTemplate,
       defaultDuration: user.defaultDuration,
+      defaultConsultationValue: user.defaultConsultationValue ?? 0,
       schedule,
     };
   }

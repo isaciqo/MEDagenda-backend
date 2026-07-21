@@ -44,6 +44,7 @@ module.exports = () => ({
     photoUrl: Joi.string().uri().optional().allow('', null),
     whatsappTemplate: whatsappTemplateSchema,
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),
+    defaultConsultationValue: Joi.number().min(0).optional(),
     schedule: Joi.object({
       segunda: daySchema,
       terca: daySchema,
