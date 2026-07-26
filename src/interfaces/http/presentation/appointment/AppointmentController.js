@@ -10,6 +10,9 @@ class AppointmentController {
     deleteAppointmentOperation,
     getReturnLinkOperation,
     generateAppointmentLinksOperation,
+    createAppointmentSeriesOperation,
+    deleteAppointmentSeriesOperation,
+    updateAppointmentSeriesOperation,
     auditService,
   }) {
     this.createAppointmentOperation = createAppointmentOperation;
@@ -22,6 +25,9 @@ class AppointmentController {
     this.deleteAppointmentOperation = deleteAppointmentOperation;
     this.getReturnLinkOperation = getReturnLinkOperation;
     this.generateAppointmentLinksOperation = generateAppointmentLinksOperation;
+    this.createAppointmentSeriesOperation = createAppointmentSeriesOperation;
+    this.deleteAppointmentSeriesOperation = deleteAppointmentSeriesOperation;
+    this.updateAppointmentSeriesOperation = updateAppointmentSeriesOperation;
     this.auditService = auditService;
   }
 
@@ -102,6 +108,33 @@ class AppointmentController {
 
   async generateLinks(req, res) {
     const result = await this.generateAppointmentLinksOperation.execute(req.params.id, req.user.user_id);
+    res.status(200).json(result);
+  }
+
+  async createSeries(req, res) {
+    const result = await this.createAppointmentSeriesOperation.execute({
+      doctor_id: req.user.user_id,
+      ...req.body,
+    });
+    res.status(201).json(result);
+  }
+
+  async deleteSeries(req, res) {
+    const result = await this.deleteAppointmentSeriesOperation.execute({
+      doctor_id: req.user.user_id,
+      seriesId: req.params.seriesId,
+      fromDate: req.query.from,
+    });
+    res.status(200).json(result);
+  }
+
+  async updateSeries(req, res) {
+    const result = await this.updateAppointmentSeriesOperation.execute({
+      doctor_id: req.user.user_id,
+      seriesId: req.params.seriesId,
+      fromDate: req.query.from,
+      data: req.body,
+    });
     res.status(200).json(result);
   }
 }

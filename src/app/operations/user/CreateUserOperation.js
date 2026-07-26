@@ -9,7 +9,7 @@ class CreateUserOperation {
     this.emailService = emailService;
   }
 
-  async execute({ name, email, password }) {
+  async execute({ name, email, password, referralCode = null }) {
     logger.info('register: tentativa de cadastro', { email });
 
     const existing = await this.userRepository.findByEmail(email);
@@ -33,11 +33,17 @@ class CreateUserOperation {
       isConfirmed: false,
       plan: 'trial',
       trialExpiresAt,
+      pendingReferralCode: referralCode || null,
     });
 
     logger.info('register: usuário criado', { email, user_id: user.user_id });
 
     const confirmToken = this.tokenService.generateTempToken({ email }, '1h');
+
+    if (process.env.NODE_ENV !== 'production') {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+      logger.info(`[DEV] Confirmar email → ${frontendUrl}/confirm-email?token=${confirmToken}`);
+    }
 
     try {
       await this.emailService.sendConfirmationEmail({ email, name: user.name, token: confirmToken });

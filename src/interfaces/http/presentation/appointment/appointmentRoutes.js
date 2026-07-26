@@ -4,6 +4,27 @@ const appointmentSchema = require('./appointmentSchemas')();
 module.exports = [
   {
     method: 'post',
+    path: '/appointments/series',
+    handler: 'appointmentController.createSeries',
+    middlewares: [authMiddleware],
+    validation: { body: appointmentSchema.createSeries },
+  },
+  {
+    method: 'delete',
+    path: '/appointments/series/:seriesId',
+    handler: 'appointmentController.deleteSeries',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.seriesId, query: appointmentSchema.seriesFrom },
+  },
+  {
+    method: 'patch',
+    path: '/appointments/series/:seriesId',
+    handler: 'appointmentController.updateSeries',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.seriesId, query: appointmentSchema.seriesFrom, body: appointmentSchema.updateSeries },
+  },
+  {
+    method: 'post',
     path: '/appointments',
     handler: 'appointmentController.create',
     middlewares: [authMiddleware],

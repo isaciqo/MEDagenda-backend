@@ -21,6 +21,14 @@ class UserRepository {
     return User.findOne({ googleId });
   }
 
+  async findByReferralCode(referralCode) {
+    return User.findOne({ referralCode });
+  }
+
+  async incrementReferralCount(user_id) {
+    return User.findOneAndUpdate({ user_id }, { $inc: { referralCount: 1 } }, { new: true });
+  }
+
   async findExpiringTrials(withinDays = 7) {
     const now = new Date();
     const deadline = new Date(now.getTime() + withinDays * 24 * 60 * 60 * 1000);

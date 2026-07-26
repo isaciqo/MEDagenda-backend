@@ -26,6 +26,7 @@ module.exports = () => ({
     name: Joi.string().min(2).max(50),
     email: Joi.string().email(),
     onboardingCompleted: Joi.boolean(),
+    followUpMode: Joi.string().valid('paid_recurrence', 'return', 'free').allow(null),
   }).min(1),
 
   changePassword: Joi.object({

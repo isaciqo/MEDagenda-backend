@@ -54,6 +54,9 @@ class UpdateAppointmentOperation {
       notes: updated.notes,
       isReturn: updated.isReturn ?? false,
       returnOf: updated.returnOf ?? null,
+      seriesId: updated.seriesId ?? null,
+      seriesIndex: updated.seriesIndex ?? null,
+      seriesTotalSessions: updated.seriesTotalSessions ?? null,
     };
   }
 }

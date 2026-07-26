@@ -32,6 +32,9 @@ class GetAppointmentOperation {
       location: a.location || '',
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
+      seriesId: a.seriesId ?? null,
+      seriesIndex: a.seriesIndex ?? null,
+      seriesTotalSessions: a.seriesTotalSessions ?? null,
     };
   }
 }

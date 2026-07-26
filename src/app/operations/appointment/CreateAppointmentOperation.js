@@ -17,7 +17,7 @@ class CreateAppointmentOperation {
     this.planService = planService;
   }
 
-  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, returnDate, returnTime, returnEstimatedValue }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
     // ── Plan enforcement ───────────────────────────────────────────
     const user = await this.userRepository.findById(doctor_id);
     if (user) {
@@ -80,7 +80,7 @@ class CreateAppointmentOperation {
         type,
         date: returnDate,
         time: returnTime || time,
-        estimatedValue: returnEstimatedValue ?? estimatedValue,
+        estimatedValue: returnIsPaid ? (returnEstimatedValue ?? estimatedValue) : 0,
         notes: '',
         location: type === 'presencial' ? (location || '') : '',
         status: 'agendado',
@@ -143,6 +143,9 @@ class CreateAppointmentOperation {
       location: a.location || '',
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
+      seriesId: a.seriesId ?? null,
+      seriesIndex: a.seriesIndex ?? null,
+      seriesTotalSessions: a.seriesTotalSessions ?? null,
     };
   }
 }

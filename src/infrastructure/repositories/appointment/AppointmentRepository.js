@@ -83,6 +83,25 @@ class AppointmentRepository {
       status: { $ne: 'cancelado' },
     });
   }
+
+  async findBySeriesId(seriesId) {
+    return Appointment.find({ seriesId }).sort({ date: 1, time: 1 });
+  }
+
+  async deleteFutureInSeries(seriesId, fromDate) {
+    return Appointment.deleteMany({
+      seriesId,
+      date: { $gte: fromDate },
+      status: { $ne: 'realizado' },
+    });
+  }
+
+  async updateFutureInSeries(seriesId, fromDate, data) {
+    return Appointment.updateMany(
+      { seriesId, date: { $gte: fromDate }, status: { $ne: 'realizado' } },
+      { $set: data }
+    );
+  }
 }
 
 module.exports = AppointmentRepository;

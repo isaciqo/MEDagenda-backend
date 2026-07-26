@@ -34,6 +34,9 @@ const appointmentSchema = new mongoose.Schema({
   expiresAt: { type: Date, default: null },
   isReturn: { type: Boolean, default: false },
   returnOf: { type: String, default: null },
+  seriesId: { type: String, default: null, index: true },
+  seriesIndex: { type: Number, default: null },
+  seriesTotalSessions: { type: Number, default: null },
 }, { timestamps: true });
 
 // TTL: MongoDB deleta automaticamente quando expiresAt <= now

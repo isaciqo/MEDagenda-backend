@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, default: null, sparse: true },
   trialWarningSentAt: { type: Date, default: null },
   onboardingCompleted: { type: Boolean, default: false },
+  referralCode: { type: String, default: null, sparse: true },
+  referralRewardGrantedAt: { type: Date, default: null },
+  pendingReferralCode: { type: String, default: null },
+  followUpMode: { type: String, enum: ['paid_recurrence', 'return', 'free'], default: null },
   schedule: {
     type: Map,
     of: scheduleSchema,
@@ -48,5 +52,6 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.index({ plan: 1, trialExpiresAt: 1, trialWarningSentAt: 1, isConfirmed: 1 });
+userSchema.index({ referralCode: 1 }, { sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

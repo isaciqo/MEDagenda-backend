@@ -1,10 +1,11 @@
 const logger = require('../../../lib/logger');
 
 class EmailConfirmationOperation {
-  constructor({ userRepository, tokenService, emailService }) {
+  constructor({ userRepository, tokenService, emailService, processReferralOperation }) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.emailService = emailService;
+    this.processReferralOperation = processReferralOperation;
   }
 
   async execute(token) {
@@ -30,6 +31,18 @@ class EmailConfirmationOperation {
 
     await this.userRepository.update(user.user_id, { isConfirmed: true });
     logger.info('email-confirmation: conta confirmada', { email: user.email });
+
+    if (user.pendingReferralCode) {
+      try {
+        await this.processReferralOperation.execute({
+          code: user.pendingReferralCode,
+          referredUserId: user.user_id,
+        });
+        await this.userRepository.update(user.user_id, { pendingReferralCode: null });
+      } catch (err) {
+        logger.warn('email-confirmation: falha ao processar indicação pendente', { error: err.message });
+      }
+    }
 
     // AU04: e-mail de boas-vindas após confirmação
     try {
