@@ -28,6 +28,10 @@ class GetMeOperation {
       photoUrl: user.photoUrl,
       createdAt: user.createdAt,
       onboardingCompleted: user.onboardingCompleted ?? false,
+      followUpMode: user.followUpMode ?? null,
+      isGoogleLinked: !!user.googleId,
+      pendingEmail: user.pendingEmail ?? null,
+      pendingEmailRequestedAt: user.pendingEmailRequestedAt ?? null,
       ...this.planService.buildPlanInfo(user, monthlyCount),
     };
   }

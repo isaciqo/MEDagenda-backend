@@ -17,9 +17,11 @@ class HandleStripeWebhookOperation {
       throw error;
     }
 
-    // Idempotência: ignora eventos já processados
+    // Idempotência: ignora eventos já processados.
+    // Guarda o payload bruto também — a Stripe só garante o evento disponível via API
+    // por um tempo limitado; pra investigar algo mais antigo, isso é a única fonte própria.
     try {
-      await ProcessedStripeEvent.create({ eventId: event.id });
+      await ProcessedStripeEvent.create({ eventId: event.id, type: event.type, payload: event });
     } catch (err) {
       if (err.code === 11000) {
         logger.info(`Webhook: evento ${event.id} já processado — ignorando`);

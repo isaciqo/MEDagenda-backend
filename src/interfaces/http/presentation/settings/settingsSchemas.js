@@ -1,22 +1,35 @@
 const Joi = require('joi');
 
-const ALLOWED_TEMPLATE_VARS = new Set(['nome', 'data', 'hora', 'medico', 'link', 'endereco']);
-const ALLOWED_DISPLAY = 'nome, data, hora, medico, link, endereco';
-
-const whatsappTemplateSchema = Joi.string().custom((value, helpers) => {
+const makeTemplateSchema = (allowedVars, displayVars) => Joi.string().custom((value, helpers) => {
   const matches = [...value.matchAll(/\{([^}]+)\}/g)];
   const invalid = matches
     .map(m => m[1].trim())
-    .filter(v => !ALLOWED_TEMPLATE_VARS.has(v));
+    .filter(v => !allowedVars.has(v));
 
   if (invalid.length > 0) {
     const invalidDisplay = invalid.map(v => `{${v}}`).join(', ');
-    return helpers.error('whatsappTemplate.invalidVar', { invalidDisplay });
+    return helpers.error('template.invalidVar', { invalidDisplay });
   }
   return value;
 }).optional().messages({
-  'whatsappTemplate.invalidVar': `Variável(is) inválida(s) no template: {{#invalidDisplay}}. Use apenas: ${ALLOWED_DISPLAY}.`,
+  'template.invalidVar': `Variável(is) inválida(s) no template: {{#invalidDisplay}}. Use apenas: ${displayVars}.`,
 });
+
+// 'nome' aceito como alias legado de 'cliente' — templates salvos antes da renomeação continuam válidos.
+const whatsappTemplateSchema = makeTemplateSchema(
+  new Set(['cliente', 'nome', 'data', 'hora', 'medico', 'link', 'endereco']),
+  'cliente, data, hora, medico, link, endereco'
+);
+
+const reviewTemplateSchema = makeTemplateSchema(
+  new Set(['cliente', 'link']),
+  'cliente, link'
+);
+
+const returnTemplateSchema = makeTemplateSchema(
+  new Set(['cliente', 'medico', 'dias']),
+  'cliente, medico, dias'
+);
 
 // CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end
 const timeSchema = Joi.string()
@@ -43,6 +56,8 @@ module.exports = () => ({
     clinicAddress: Joi.string().optional().allow(''),
     photoUrl: Joi.string().uri().optional().allow('', null),
     whatsappTemplate: whatsappTemplateSchema,
+    reviewTemplate: reviewTemplateSchema,
+    returnTemplate: returnTemplateSchema,
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),
     defaultConsultationValue: Joi.number().min(0).optional(),
     schedule: Joi.object({

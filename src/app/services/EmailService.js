@@ -15,8 +15,6 @@ class EmailService {
    */
   async _send({ from, to, subject, html, replyTo }, context) {
     try {
-      console.log('api_key', process.env.RESEND_API_KEY);
-  
       const senderAddress = from || `${this.fromName} <${this.fromEmail}>`;
 
       const payload = {
@@ -304,6 +302,55 @@ class EmailService {
         `,
       },
       `reset de senha para ${email}`
+    );
+  }
+
+  async sendPasswordChangedNotice({ email, name }) {
+    return this._send(
+      {
+        to: email,
+        subject: 'Sua senha foi alterada - CliniQ',
+        html: `
+          <p>Olá, ${name}!</p>
+          <p>Sua senha foi alterada com sucesso.</p>
+          <p style="color:#b91c1c;"><strong>Se não foi você quem fez essa alteração, contate o suporte imediatamente.</strong></p>
+        `,
+      },
+      `aviso de senha alterada para ${email}`
+    );
+  }
+
+  async sendEmailChangeConfirmation({ email, name, token }) {
+    const confirmUrl = `${this.frontendUrl}/confirmar-troca-email?token=${token}`;
+
+    return this._send(
+      {
+        to: email,
+        subject: 'Confirme seu novo e-mail - CliniQ',
+        html: `
+          <p>Olá, ${name}!</p>
+          <p>Recebemos um pedido para usar este e-mail na sua conta CliniQ.</p>
+          <p>Clique no link abaixo para confirmar:</p>
+          <p><a href="${confirmUrl}">${confirmUrl}</a></p>
+          <p>Este link expira em 1 hora. Se você não solicitou essa troca, ignore este e-mail.</p>
+        `,
+      },
+      `confirmação de troca de e-mail para ${email}`
+    );
+  }
+
+  async sendEmailChangedNotice({ email, name, newEmail }) {
+    return this._send(
+      {
+        to: email,
+        subject: 'O e-mail da sua conta foi alterado - CliniQ',
+        html: `
+          <p>Olá, ${name}!</p>
+          <p>O e-mail da sua conta CliniQ foi alterado para <strong>${newEmail}</strong>.</p>
+          <p style="color:#b91c1c;"><strong>Se não foi você quem fez essa alteração, contate o suporte imediatamente.</strong></p>
+        `,
+      },
+      `aviso de e-mail alterado para ${email}`
     );
   }
 }

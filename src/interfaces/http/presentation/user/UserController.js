@@ -9,6 +9,9 @@ class UserController {
     emailConfirmationOperation,
     requestPasswordResetOperation,
     confirmPasswordResetOperation,
+    requestEmailChangeOperation,
+    confirmEmailChangeOperation,
+    cancelEmailChangeOperation,
     auditService,
   }) {
     this.createUserOperation = createUserOperation;
@@ -20,6 +23,9 @@ class UserController {
     this.emailConfirmationOperation = emailConfirmationOperation;
     this.requestPasswordResetOperation = requestPasswordResetOperation;
     this.confirmPasswordResetOperation = confirmPasswordResetOperation;
+    this.requestEmailChangeOperation = requestEmailChangeOperation;
+    this.confirmEmailChangeOperation = confirmEmailChangeOperation;
+    this.cancelEmailChangeOperation = cancelEmailChangeOperation;
     this.auditService = auditService;
   }
 
@@ -77,6 +83,31 @@ class UserController {
       resource_id: req.params.user_id,
       ip_address: req.ip,
     });
+    res.status(200).json(result);
+  }
+
+  async requestEmailChange(req, res) {
+    const result = await this.requestEmailChangeOperation.execute({
+      user_id: req.params.user_id,
+      ...req.body,
+    });
+    await this.auditService.log({
+      actor_id: req.params.user_id,
+      action: 'auth.email_change_requested',
+      resource_type: 'user',
+      resource_id: req.params.user_id,
+      ip_address: req.ip,
+    });
+    res.status(200).json(result);
+  }
+
+  async confirmEmailChange(req, res) {
+    const result = await this.confirmEmailChangeOperation.execute(req.params.token);
+    res.status(200).json(result);
+  }
+
+  async cancelEmailChange(req, res) {
+    const result = await this.cancelEmailChangeOperation.execute(req.params.user_id);
     res.status(200).json(result);
   }
 

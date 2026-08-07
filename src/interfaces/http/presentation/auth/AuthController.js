@@ -7,6 +7,7 @@ class AuthController {
     requestPasswordResetOperation,
     confirmPasswordResetOperation,
     googleAuthOperation,
+    refreshTokenOperation,
     auditService,
   }) {
     this.createUserOperation = createUserOperation;
@@ -16,6 +17,7 @@ class AuthController {
     this.requestPasswordResetOperation = requestPasswordResetOperation;
     this.confirmPasswordResetOperation = confirmPasswordResetOperation;
     this.googleAuthOperation = googleAuthOperation;
+    this.refreshTokenOperation = refreshTokenOperation;
     this.auditService = auditService;
   }
 
@@ -84,6 +86,11 @@ class AuthController {
       ip_address: req.ip,
     });
     return res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken });
+  }
+
+  async refresh(req, res) {
+    const result = await this.refreshTokenOperation.execute(req.body.refreshToken);
+    res.status(200).json(result);
   }
 
   async logout(req, res) {

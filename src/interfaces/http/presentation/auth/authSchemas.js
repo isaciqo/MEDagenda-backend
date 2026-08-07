@@ -31,4 +31,8 @@ module.exports = () => ({
     token: Joi.string().required(),
     newPassword: passwordSchema,
   }),
+
+  refresh: Joi.object({
+    refreshToken: Joi.string().required(),
+  }),
 });

@@ -162,6 +162,33 @@ module.exports = [
   },
   {
     method: 'post',
+    path: '/auth/refresh',
+    handler: 'authController.refresh',
+    middlewares: [],
+    validation: { body: authSchema.refresh },
+    swagger: {
+      tags: ['Auth'],
+      summary: 'Renova o accessToken a partir de um refreshToken válido',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['refreshToken'],
+              properties: { refreshToken: { type: 'string' } },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: 'Retorna um novo accessToken' },
+        401: { description: 'Refresh token inválido, expirado ou revogado' },
+      },
+    },
+  },
+  {
+    method: 'post',
     path: '/auth/logout',
     handler: 'authController.logout',
     middlewares: [authMiddleware],

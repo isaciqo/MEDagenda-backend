@@ -47,6 +47,12 @@ app.use(cors({
   credentials: true,
 }));
 
+// Health check — sem auth, sem depender do banco, usado como keep-alive/monitoramento.
+// Registrado depois do cors() para receber os headers de Access-Control-Allow-Origin.
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,

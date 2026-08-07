@@ -17,6 +17,8 @@ class UpdateSettingsOperation {
     if (data.clinicAddress !== undefined) updateData.clinicAddress = data.clinicAddress;
     if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
     if (data.whatsappTemplate !== undefined) updateData.whatsappTemplate = data.whatsappTemplate;
+    if (data.reviewTemplate !== undefined) updateData.reviewTemplate = data.reviewTemplate;
+    if (data.returnTemplate !== undefined) updateData.returnTemplate = data.returnTemplate;
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
     if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
     if (data.schedule !== undefined) updateData.schedule = data.schedule;
@@ -33,6 +35,8 @@ class UpdateSettingsOperation {
       clinicAddress: updated.clinicAddress || '',
       photoUrl: updated.photoUrl,
       whatsappTemplate: updated.whatsappTemplate,
+      reviewTemplate: updated.reviewTemplate,
+      returnTemplate: updated.returnTemplate,
       defaultDuration: updated.defaultDuration,
       defaultConsultationValue: updated.defaultConsultationValue ?? 0,
       schedule,

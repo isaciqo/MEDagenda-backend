@@ -21,6 +21,8 @@ class GetSettingsOperation {
       clinicAddress: user.clinicAddress || '',
       photoUrl: user.photoUrl,
       whatsappTemplate: user.whatsappTemplate,
+      reviewTemplate: user.reviewTemplate,
+      returnTemplate: user.returnTemplate,
       defaultDuration: user.defaultDuration,
       defaultConsultationValue: user.defaultConsultationValue ?? 0,
       schedule,

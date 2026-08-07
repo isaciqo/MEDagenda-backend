@@ -36,7 +36,9 @@ class GetDashboardStatsOperation {
       const upcoming = all
         .filter(a => a.date >= today && a.status !== 'cancelado')
         .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-      return upcoming.length > 0 ? { patientName: upcoming[0].patient.name, time: upcoming[0].time } : null;
+      return upcoming.length > 0
+        ? { patientName: upcoming[0].patient.name, date: upcoming[0].date, time: upcoming[0].time }
+        : null;
     })();
 
     // --- Period-filtered metrics ---

@@ -19,6 +19,22 @@ module.exports = [
     },
   },
   {
+    method: 'get',
+    path: '/settings/locations',
+    handler: 'settingsController.locations',
+    middlewares: [authMiddleware],
+    validation: {},
+    swagger: {
+      tags: ['Settings'],
+      summary: 'Lista os endereços já usados pelo médico em consultas presenciais',
+      security: [{ BearerAuth: [] }],
+      responses: {
+        200: { description: 'Lista de endereços distintos' },
+        401: { description: 'Unauthorized' },
+      },
+    },
+  },
+  {
     method: 'put',
     path: '/settings',
     handler: 'settingsController.update',

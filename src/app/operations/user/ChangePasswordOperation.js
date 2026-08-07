@@ -1,9 +1,10 @@
 const logger = require('../../../lib/logger');
 
 class ChangePasswordOperation {
-  constructor({ userRepository, hashPasswordService }) {
+  constructor({ userRepository, hashPasswordService, emailService }) {
     this.userRepository = userRepository;
     this.hashPasswordService = hashPasswordService;
+    this.emailService = emailService;
   }
 
   async execute({ user_id, currentPassword, newPassword }) {
@@ -29,6 +30,13 @@ class ChangePasswordOperation {
     await this.userRepository.incrementTokenVersion(user_id);
 
     logger.info('change-password: senha alterada, sessões anteriores invalidadas', { user_id });
+
+    try {
+      await this.emailService.sendPasswordChangedNotice({ email: user.email, name: user.name });
+    } catch (err) {
+      logger.error('change-password: falha ao enviar aviso de senha alterada', { user_id, error: err.message });
+    }
+
     return { message: 'Senha alterada com sucesso' };
   }
 }

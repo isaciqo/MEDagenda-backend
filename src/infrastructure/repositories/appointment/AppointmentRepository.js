@@ -84,6 +84,14 @@ class AppointmentRepository {
     });
   }
 
+  async findDistinctLocations(doctor_id) {
+    const locations = await Appointment.distinct('location', {
+      doctor_id,
+      location: { $nin: [null, ''] },
+    });
+    return locations.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
   async findBySeriesId(seriesId) {
     return Appointment.find({ seriesId }).sort({ date: 1, time: 1 });
   }

@@ -38,6 +38,15 @@ module.exports = () => ({
     token: Joi.string().required(),
   }),
 
+  requestEmailChange: Joi.object({
+    currentPassword: Joi.string().required(),
+    newEmail: Joi.string().email().required(),
+  }),
+
+  confirmEmailChange: Joi.object({
+    token: Joi.string().required(),
+  }),
+
   requestPasswordReset: Joi.object({
     email: Joi.string().email().required(),
   }),

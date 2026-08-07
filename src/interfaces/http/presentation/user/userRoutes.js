@@ -216,6 +216,70 @@ module.exports = [
     },
   },
   {
+    method: 'post',
+    path: '/users/:user_id/request-email-change',
+    handler: 'userController.requestEmailChange',
+    middlewares: [authMiddleware, ownershipMiddleware],
+    validation: { params: userSchema.getUserById, body: userSchema.requestEmailChange },
+    swagger: {
+      tags: ['Users'],
+      summary: 'Request an email change — sends a confirmation link to the new address',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'user_id', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['currentPassword', 'newEmail'],
+              properties: {
+                currentPassword: { type: 'string' },
+                newEmail: { type: 'string', format: 'email' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: 'Confirmation email sent' },
+        400: { description: 'Invalid password or Google-linked account' },
+        409: { description: 'Email already in use' },
+        429: { description: 'Resend cooldown active' },
+      },
+    },
+  },
+  {
+    method: 'get',
+    path: '/users/confirm-email-change/:token',
+    handler: 'userController.confirmEmailChange',
+    middlewares: [],
+    validation: { params: userSchema.confirmEmailChange },
+    swagger: {
+      tags: ['Users'],
+      summary: 'Confirm a pending email change',
+      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Email changed' },
+        400: { description: 'Invalid or expired token' },
+      },
+    },
+  },
+  {
+    method: 'delete',
+    path: '/users/:user_id/pending-email-change',
+    handler: 'userController.cancelEmailChange',
+    middlewares: [authMiddleware, ownershipMiddleware],
+    validation: { params: userSchema.getUserById },
+    swagger: {
+      tags: ['Users'],
+      summary: 'Cancel a pending email change',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'user_id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Pending email change cancelled' } },
+    },
+  },
+  {
     method: 'delete',
     path: '/users/:user_id',
     handler: 'userController.deleteUser',
