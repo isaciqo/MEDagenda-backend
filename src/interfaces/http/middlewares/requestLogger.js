@@ -11,13 +11,14 @@ function requestLogger(req, res, next) {
     const duration = Date.now() - start;
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
 
+    // user_id/email/request_id são injetados automaticamente pelo logger a partir do
+    // contexto da requisição (ver requestContext.js) — não precisam ser passados aqui.
     logger[level](`${req.method} ${req.path} ${res.statusCode}`, {
       method: req.method,
       path: req.path,
       status: res.statusCode,
       duration_ms: duration,
       ip: req.ip,
-      user_id: req.user?.user_id ?? null,
     });
   });
 

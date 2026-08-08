@@ -9,11 +9,22 @@ const container = require('./src/interfaces/http/container');
 const routerRegister = require('./src/interfaces/http/presentation/RouterRegister');
 const errorHandler = require('./src/interfaces/http/middlewares/errorHandler');
 const requestLogger = require('./src/interfaces/http/middlewares/requestLogger');
+const requestContextMiddleware = require('./src/interfaces/http/middlewares/requestContext');
 const setupSwagger = require('./src/interfaces/http/presentation/swagger');
 const logger = require('./src/lib/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Render (e a maioria dos PaaS) fica atrás de um proxy reverso — sem isso, req.ip
+// mostra o IP interno do proxy, não o do cliente real, quebrando silenciosamente
+// os logs, o audit log e o rate limiter (que usa req.ip pra identificar quem é quem).
+app.set('trust proxy', 1);
+
+// Precisa ser o primeiríssimo middleware: abre o contexto de request_id que todo o
+// resto da requisição herda, inclusive o webhook do Stripe abaixo (registrado antes
+// do express.json()) e qualquer erro que aconteça em helmet/cors/rate-limit.
+app.use(requestContextMiddleware);
 
 app.use(helmet());
 
