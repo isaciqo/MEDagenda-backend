@@ -15,7 +15,9 @@ class AppointmentRepository {
       if (to) filter.date.$lte = to;
     }
     if (status) filter.status = status;
-    return Appointment.find(filter).sort({ date: 1, time: 1 });
+    // Teto de segurança — sem filtro de data, isso nunca teve limite. Bem acima do
+    // que um médico real acumula mesmo sem o filtro (ver ANALISE_ABUSO_CUSTO.md).
+    return Appointment.find(filter).sort({ date: 1, time: 1 }).limit(2000);
   }
 
   async create(data) {

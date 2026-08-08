@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../../lib/logger');
+const { isDisposableEmail } = require('../../../lib/disposableEmail');
 
 class CreateUserOperation {
   constructor({ userRepository, hashPasswordService, tokenService, emailService }) {
@@ -11,6 +12,16 @@ class CreateUserOperation {
 
   async execute({ name, email, password, referralCode = null }) {
     logger.info('register: tentativa de cadastro', { email });
+
+    // Trial de 30 dias com feature-set completo é caro de dar de graça em escala —
+    // e-mail descartável é o jeito mais barato de fabricar contas trial infinitas
+    // (ver ANALISE_ABUSO_CUSTO.md, Business-Flow-04).
+    if (isDisposableEmail(email)) {
+      logger.warn('register: domínio de e-mail descartável bloqueado', { email });
+      const err = new Error('Não aceitamos e-mails temporários/descartáveis. Use um e-mail válido.');
+      err.statusCode = 400;
+      throw err;
+    }
 
     const existing = await this.userRepository.findByEmail(email);
     if (existing) {

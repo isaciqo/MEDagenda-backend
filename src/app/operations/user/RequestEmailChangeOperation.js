@@ -1,4 +1,5 @@
 const logger = require('../../../lib/logger');
+const { isDisposableEmail } = require('../../../lib/disposableEmail');
 
 const RESEND_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
@@ -36,6 +37,12 @@ class RequestEmailChangeOperation {
     if (existing && existing.user_id !== user_id) {
       const err = new Error('Este e-mail já está em uso');
       err.statusCode = 409;
+      throw err;
+    }
+
+    if (isDisposableEmail(newEmail)) {
+      const err = new Error('Não aceitamos e-mails temporários/descartáveis. Use um e-mail válido.');
+      err.statusCode = 400;
       throw err;
     }
 

@@ -26,6 +26,7 @@ class CreateAppointmentOperation {
 
     try {
       const { eventId, meetingLink } = await this.googleCalendarService.createMeetEvent({
+        doctorId: user.user_id,
         date,
         time,
         durationMinutes: user.defaultDuration || 30,

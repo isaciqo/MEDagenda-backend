@@ -44,4 +44,11 @@ const appointmentSchema = new mongoose.Schema({
 // TTL: MongoDB deleta automaticamente quando expiresAt <= now
 appointmentSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+// Toda query autenticada filtra por doctor_id (e a maioria também por date/range) —
+// sem esse índice composto, CADA chamada a /appointments, /dashboard/stats e
+// /financial/summary faz um collection scan na coleção INTEIRA (todos os médicos),
+// não só nos documentos daquele médico. Sem rate limit nessas rotas, isso é o maior
+// multiplicador de custo de CPU/IO do Mongo que existe no sistema hoje.
+appointmentSchema.index({ doctor_id: 1, date: 1 });
+
 module.exports = mongoose.model('Appointment', appointmentSchema);

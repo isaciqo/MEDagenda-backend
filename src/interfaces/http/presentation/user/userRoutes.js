@@ -1,6 +1,21 @@
+const rateLimit = require('express-rate-limit');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const ownershipMiddleware = require('../../middlewares/ownershipMiddleware');
 const userSchema = require('./userSchemas')();
+
+// O cooldown de 24h dentro de RequestEmailChangeOperation só se aplica quando o
+// MESMO newEmail é repetido — trocar o alvo a cada chamada não tinha freio nenhum,
+// virando um bombardeiro de e-mail contra qualquer endereço externo (ver
+// ANALISE_ABUSO_CUSTO.md, Business-Flow-03). Este limite é por CONTA atacante,
+// independente do e-mail-alvo, e continua permitindo a correção instantânea de um
+// e-mail digitado errado (poucas tentativas por hora é suficiente pra isso).
+const emailChangeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas solicitações de troca de e-mail. Aguarde antes de tentar novamente.' },
+});
 
 module.exports = [
   {
@@ -219,7 +234,7 @@ module.exports = [
     method: 'post',
     path: '/users/:user_id/request-email-change',
     handler: 'userController.requestEmailChange',
-    middlewares: [authMiddleware, ownershipMiddleware],
+    middlewares: [authMiddleware, ownershipMiddleware, emailChangeLimiter],
     validation: { params: userSchema.getUserById, body: userSchema.requestEmailChange },
     swagger: {
       tags: ['Users'],

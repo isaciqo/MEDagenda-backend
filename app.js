@@ -88,10 +88,64 @@ const checkoutLimiter = rateLimit({
   message: { error: 'Muitas tentativas de checkout. Aguarde antes de tentar novamente.' },
 });
 
+// POST /reviews é público (paciente avalia sem login) e não tinha NENHUM rate limit —
+// diferente das outras rotas públicas, não vive sob /api/v1/public/, então o
+// publicLimiter abaixo não pegava. Mesmo limite generoso o bastante pra um médico
+// consultar suas próprias avaliações (GET, autenticado) sem esbarrar nele.
+const reviewsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Tente novamente em alguns instantes.' },
+});
+
+// /support/send dispara um e-mail de verdade (custo Resend + risco de flag de abuso
+// na conta) e só tinha authMiddleware — qualquer conta trial, de graça, conseguia
+// martelar esse endpoint sem limite nenhum.
+const supportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas solicitações de suporte. Tente novamente mais tarde.' },
+});
+
+// /auth/refresh não tinha limite — um refresh token vazado/roubado (vida de 7 dias)
+// podia ser usado em loop pra emitir access tokens sem nenhum freio. Limite mais
+// folgado que o authLimiter porque várias pessoas atrás do mesmo IP (ex: consultório
+// com wifi compartilhado) fazem refresh legítimo com frequência independente umas das outras.
+const refreshLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas tentativas. Aguarde antes de tentar novamente.' },
+});
+
+// Guarda-chuva: até agora só rotas específicas tinham limite (login, checkout,
+// público, etc) — o resto da API (agenda, pacientes, dashboard, financeiro...)
+// não tinha NENHUM teto de frequência além de ter sessão válida. Qualquer conta
+// trial gratuita conseguia gerar carga ilimitada nessas rotas (ver
+// ANALISE_ABUSO_CUSTO.md, EDoS-02). Limite generoso o bastante pra não incomodar
+// uso legítimo — é uma rede de segurança, não a defesa principal; ajustar o
+// número conforme dados reais de tráfego em produção.
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Aguarde antes de tentar novamente.' },
+});
+app.use('/api/v1', globalApiLimiter);
+
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
 app.use('/api/v1/auth/forgot-password', authLimiter);
+app.use('/api/v1/auth/refresh', refreshLimiter);
 app.use('/api/v1/subscriptions/checkout', checkoutLimiter);
+app.use('/api/v1/reviews', reviewsLimiter);
+app.use('/api/v1/support/send', supportLimiter);
 app.use('/api/v1/public/', publicLimiter);
 
 setupSwagger(app);
