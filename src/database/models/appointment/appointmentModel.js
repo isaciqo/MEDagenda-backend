@@ -26,6 +26,8 @@ const appointmentSchema = new mongoose.Schema({
   },
   notes: { type: String, default: '' },
   location: { type: String, default: '' },
+  meetingLink: { type: String, default: null },
+  calendarEventId: { type: String, default: null }, // uso interno — nunca expor na API
   activeReviewLinkId: { type: String, default: null },
   reviewLinkExpires: { type: Date, default: null },
   rescheduleCount: { type: Number, default: 0 },

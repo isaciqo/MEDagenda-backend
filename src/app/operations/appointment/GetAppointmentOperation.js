@@ -30,6 +30,7 @@ class GetAppointmentOperation {
       status: a.status,
       notes: a.notes,
       location: a.location || '',
+      meetingLink: a.meetingLink ?? null,
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
       seriesId: a.seriesId ?? null,

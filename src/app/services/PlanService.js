@@ -5,11 +5,10 @@ const MONTHLY_LIMIT = {
 };
 
 // Features disponíveis por plano (Essencial tem apenas as básicas)
-// S01: Essencial inclui envio de links WhatsApp mas não relatórios avançados
 const PLAN_FEATURES = {
-  trial:        ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo'],
-  essencial:    ['whatsapp', 'dashboard_metrics'],
-  profissional: ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo'],
+  trial:        ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo', 'google_meet'],
+  essencial:    ['dashboard_metrics'],
+  profissional: ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo', 'google_meet'],
 };
 
 class PlanService {

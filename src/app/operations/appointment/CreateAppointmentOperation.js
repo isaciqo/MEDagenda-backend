@@ -10,11 +10,36 @@ function getExpiresAt() {
 }
 
 class CreateAppointmentOperation {
-  constructor({ appointmentRepository, patientRepository, userRepository, planService }) {
+  constructor({ appointmentRepository, patientRepository, userRepository, planService, googleCalendarService }) {
     this.appointmentRepository = appointmentRepository;
     this.patientRepository = patientRepository;
     this.userRepository = userRepository;
     this.planService = planService;
+    this.googleCalendarService = googleCalendarService;
+  }
+
+  // Best-effort: se a criação do Meet falhar, a consulta continua criada normalmente,
+  // só sem o link. Ver FEATURE_GOOGLE_MEET.md — Fase 1, "caminho feliz" (sem edição/série ainda).
+  async _tryCreateMeeting({ user, appointmentId, type, date, time, patientDisplayName }) {
+    if (type !== 'online') return;
+    if (!user || !this.planService.hasFeature(user, 'google_meet')) return;
+
+    try {
+      const { eventId, meetingLink } = await this.googleCalendarService.createMeetEvent({
+        date,
+        time,
+        durationMinutes: user.defaultDuration || 30,
+        summary: `Consulta CliniQ — ${patientDisplayName}`,
+        description: `Consulta online agendada via CliniQ com ${user.name}.`,
+      });
+      await this.appointmentRepository.update(appointmentId, { meetingLink, calendarEventId: eventId });
+      return meetingLink;
+    } catch (err) {
+      logger.error('appointment.create: falha ao criar reunião do Google Meet', {
+        appointment_id: appointmentId,
+        error: err.message,
+      });
+    }
   }
 
   async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
@@ -67,6 +92,10 @@ class CreateAppointmentOperation {
       type,
     });
 
+    appointment.meetingLink = await this._tryCreateMeeting({
+      user, appointmentId, type, date, time, patientDisplayName: patient.displayName,
+    });
+
     if (returnDate) {
       const returnId = uuidv4();
       await this.appointmentRepository.create({
@@ -87,6 +116,10 @@ class CreateAppointmentOperation {
         isReturn: true,
         returnOf: appointmentId,
         expiresAt: getExpiresAt(),
+      });
+
+      await this._tryCreateMeeting({
+        user, appointmentId: returnId, type, date: returnDate, time: returnTime || time, patientDisplayName: patient.displayName,
       });
 
       logger.info('appointment.create: retorno agendado', {
@@ -141,6 +174,7 @@ class CreateAppointmentOperation {
       status: a.status,
       notes: a.notes,
       location: a.location || '',
+      meetingLink: a.meetingLink ?? null,
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
       seriesId: a.seriesId ?? null,

@@ -1,34 +1,42 @@
 const Joi = require('joi');
 
-const makeTemplateSchema = (allowedVars, displayVars) => Joi.string().custom((value, helpers) => {
+const makeTemplateSchema = (allowedVars, displayVars, requiredVar) => Joi.string().custom((value, helpers) => {
   const matches = [...value.matchAll(/\{([^}]+)\}/g)];
-  const invalid = matches
-    .map(m => m[1].trim())
-    .filter(v => !allowedVars.has(v));
+  const used = matches.map(m => m[1].trim());
+  const invalid = used.filter(v => !allowedVars.has(v));
 
   if (invalid.length > 0) {
     const invalidDisplay = invalid.map(v => `{${v}}`).join(', ');
     return helpers.error('template.invalidVar', { invalidDisplay });
   }
+
+  if (requiredVar && !used.includes(requiredVar)) {
+    return helpers.error('template.missingRequired');
+  }
+
   return value;
 }).optional().messages({
   'template.invalidVar': `Variável(is) inválida(s) no template: {{#invalidDisplay}}. Use apenas: ${displayVars}.`,
+  'template.missingRequired': `O template precisa incluir a variável "${requiredVar}".`,
 });
 
-// 'nome' aceito como alias legado de 'cliente' — templates salvos antes da renomeação continuam válidos.
+// 'nome' aceito como alias legado de 'cliente', 'medico' como alias legado de 'profissional' —
+// templates salvos antes das renomeações continuam válidos.
 const whatsappTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'nome', 'data', 'hora', 'medico', 'link', 'endereco']),
-  'cliente, data, hora, medico, link, endereco'
+  new Set(['cliente', 'nome', 'data', 'hora', 'profissional', 'medico', 'link', 'endereco', 'link_reuniao']),
+  'cliente, data, hora, profissional, link, endereco, link_reuniao',
+  'link'
 );
 
 const reviewTemplateSchema = makeTemplateSchema(
   new Set(['cliente', 'link']),
-  'cliente, link'
+  'cliente, link',
+  'link'
 );
 
 const returnTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'medico', 'dias']),
-  'cliente, medico, dias'
+  new Set(['cliente', 'profissional', 'medico', 'dias']),
+  'cliente, profissional, dias'
 );
 
 // CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end

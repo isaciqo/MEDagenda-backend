@@ -52,6 +52,7 @@ class UpdateAppointmentOperation {
       paymentDate: updated.paymentDate,
       status: updated.status,
       notes: updated.notes,
+      meetingLink: updated.meetingLink ?? null,
       isReturn: updated.isReturn ?? false,
       returnOf: updated.returnOf ?? null,
       seriesId: updated.seriesId ?? null,

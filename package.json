@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "setup:google-calendar": "node scripts/setup-google-calendar.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch"
   },
