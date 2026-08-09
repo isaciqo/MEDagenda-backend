@@ -11,6 +11,7 @@ module.exports = () => ({
     estimatedValue: Joi.number().min(0).required(),
     notes: Joi.string().optional().allow(''),
     location: Joi.string().optional().allow(''),
+    customMeetingLink: Joi.string().uri().optional().allow(''),
     returnDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
     returnTime: Joi.string().pattern(/^\d{2}:\d{2}$/).optional(),
     returnEstimatedValue: Joi.number().min(0).optional(),

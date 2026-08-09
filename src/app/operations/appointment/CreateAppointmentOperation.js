@@ -10,40 +10,44 @@ function getExpiresAt() {
 }
 
 class CreateAppointmentOperation {
-  constructor({ appointmentRepository, patientRepository, userRepository, planService, googleCalendarService }) {
+  constructor({ appointmentRepository, patientRepository, userRepository, planService, jitsiMeetingService }) {
     this.appointmentRepository = appointmentRepository;
     this.patientRepository = patientRepository;
     this.userRepository = userRepository;
     this.planService = planService;
-    this.googleCalendarService = googleCalendarService;
+    this.jitsiMeetingService = jitsiMeetingService;
   }
 
-  // Best-effort: se a criação do Meet falhar, a consulta continua criada normalmente,
-  // só sem o link. Ver FEATURE_GOOGLE_MEET.md — Fase 1, "caminho feliz" (sem edição/série ainda).
-  async _tryCreateMeeting({ user, appointmentId, type, date, time, patientDisplayName }) {
-    if (type !== 'online') return;
-    if (!user || !this.planService.hasFeature(user, 'google_meet')) return;
+  // O médico escolhe: cola o próprio link (qualquer plano) ou deixa gerar automaticamente
+  // via Jitsi (plano Profissional). Link próprio sempre tem prioridade sobre o automático.
+  // Jitsi só gera uma URL — não há chamada de rede, então não há um "falhar e seguir sem
+  // link" real de causa externa; mesmo assim mantém best-effort em torno do update do
+  // banco, pra um problema nessa escrita secundária não derrubar a consulta já criada.
+  async _resolveMeetingLink({ user, appointmentId, type, customMeetingLink }) {
+    if (type !== 'online') return null;
+
+    let meetingLink = null;
+    if (customMeetingLink) {
+      meetingLink = customMeetingLink;
+    } else if (user && this.planService.hasFeature(user, 'video_call')) {
+      meetingLink = this.jitsiMeetingService.createMeetingLink(user.name);
+    } else {
+      return null;
+    }
 
     try {
-      const { eventId, meetingLink } = await this.googleCalendarService.createMeetEvent({
-        doctorId: user.user_id,
-        date,
-        time,
-        durationMinutes: user.defaultDuration || 30,
-        summary: `Consulta CliniQ — ${patientDisplayName}`,
-        description: `Consulta online agendada via CliniQ com ${user.name}.`,
-      });
-      await this.appointmentRepository.update(appointmentId, { meetingLink, calendarEventId: eventId });
+      await this.appointmentRepository.update(appointmentId, { meetingLink });
       return meetingLink;
     } catch (err) {
-      logger.error('appointment.create: falha ao criar reunião do Google Meet', {
+      logger.error('appointment.create: falha ao salvar link da reunião', {
         appointment_id: appointmentId,
         error: err.message,
       });
+      return null;
     }
   }
 
-  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, customMeetingLink, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
     // ── Plan enforcement ───────────────────────────────────────────
     const user = await this.userRepository.findById(doctor_id);
     if (user) {
@@ -93,9 +97,7 @@ class CreateAppointmentOperation {
       type,
     });
 
-    appointment.meetingLink = await this._tryCreateMeeting({
-      user, appointmentId, type, date, time, patientDisplayName: patient.displayName,
-    });
+    appointment.meetingLink = await this._resolveMeetingLink({ user, appointmentId, type, customMeetingLink });
 
     if (returnDate) {
       const returnId = uuidv4();
@@ -119,9 +121,7 @@ class CreateAppointmentOperation {
         expiresAt: getExpiresAt(),
       });
 
-      await this._tryCreateMeeting({
-        user, appointmentId: returnId, type, date: returnDate, time: returnTime || time, patientDisplayName: patient.displayName,
-      });
+      await this._resolveMeetingLink({ user, appointmentId: returnId, type, customMeetingLink });
 
       logger.info('appointment.create: retorno agendado', {
         doctor_id,

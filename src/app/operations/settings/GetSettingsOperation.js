@@ -23,6 +23,7 @@ class GetSettingsOperation {
       whatsappTemplate: user.whatsappTemplate,
       reviewTemplate: user.reviewTemplate,
       returnTemplate: user.returnTemplate,
+      meetingLinkTemplate: user.meetingLinkTemplate,
       defaultDuration: user.defaultDuration,
       defaultConsultationValue: user.defaultConsultationValue ?? 0,
       schedule,

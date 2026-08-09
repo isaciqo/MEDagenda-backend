@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
   whatsappTemplate: { type: String, default: 'Olá {cliente}, confirmando sua consulta em {data} às {hora} com {profissional}. Confirma sua presenca? {link}' },
   reviewTemplate: { type: String, default: 'Olá {cliente}, obrigado pela sua consulta! Deixe sua avaliação:\n\n{link}' },
   returnTemplate: { type: String, default: 'Olá {cliente}! {profissional} recomenda que você agende um retorno em {dias}. Entre em contato para marcar sua consulta de retorno.' },
+  meetingLinkTemplate: { type: String, default: 'Olá {cliente}! Segue o link da nossa consulta online:\n{link_reuniao}' },
   defaultDuration: { type: Number, default: 30 },
   defaultConsultationValue: { type: Number, default: 0 },
   tokenVersion: { type: Number, default: 0 },

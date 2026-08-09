@@ -6,9 +6,9 @@ const MONTHLY_LIMIT = {
 
 // Features disponíveis por plano (Essencial tem apenas as básicas)
 const PLAN_FEATURES = {
-  trial:        ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo', 'google_meet'],
+  trial:        ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo', 'video_call'],
   essencial:    ['dashboard_metrics'],
-  profissional: ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo', 'google_meet'],
+  profissional: ['whatsapp', 'avaliacoes', 'dashboard_metrics', 'financeiro_completo', 'video_call'],
 };
 
 class PlanService {

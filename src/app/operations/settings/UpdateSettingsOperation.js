@@ -19,6 +19,7 @@ class UpdateSettingsOperation {
     if (data.whatsappTemplate !== undefined) updateData.whatsappTemplate = data.whatsappTemplate;
     if (data.reviewTemplate !== undefined) updateData.reviewTemplate = data.reviewTemplate;
     if (data.returnTemplate !== undefined) updateData.returnTemplate = data.returnTemplate;
+    if (data.meetingLinkTemplate !== undefined) updateData.meetingLinkTemplate = data.meetingLinkTemplate;
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
     if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
     if (data.schedule !== undefined) updateData.schedule = data.schedule;
@@ -37,6 +38,7 @@ class UpdateSettingsOperation {
       whatsappTemplate: updated.whatsappTemplate,
       reviewTemplate: updated.reviewTemplate,
       returnTemplate: updated.returnTemplate,
+      meetingLinkTemplate: updated.meetingLinkTemplate,
       defaultDuration: updated.defaultDuration,
       defaultConsultationValue: updated.defaultConsultationValue ?? 0,
       schedule,

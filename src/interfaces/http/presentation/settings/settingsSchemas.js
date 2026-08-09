@@ -39,6 +39,12 @@ const returnTemplateSchema = makeTemplateSchema(
   'cliente, profissional, dias'
 );
 
+const meetingLinkTemplateSchema = makeTemplateSchema(
+  new Set(['cliente', 'profissional', 'medico', 'link_reuniao']),
+  'cliente, profissional, link_reuniao',
+  'link_reuniao'
+);
+
 // CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end
 const timeSchema = Joi.string()
   .pattern(/^([0-1]\d|2[0-3]):[0-5]\d$/)
@@ -66,6 +72,7 @@ module.exports = () => ({
     whatsappTemplate: whatsappTemplateSchema,
     reviewTemplate: reviewTemplateSchema,
     returnTemplate: returnTemplateSchema,
+    meetingLinkTemplate: meetingLinkTemplateSchema,
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),
     defaultConsultationValue: Joi.number().min(0).optional(),
     schedule: Joi.object({
