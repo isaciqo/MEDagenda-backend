@@ -36,7 +36,7 @@ const buildSwaggerSpec = () => {
   return {
     openapi: '3.0.0',
     info: {
-      title: 'MedAgenda API',
+      title: 'CliniQ Brasil API',
       version: '1.0.0',
       description: 'API para gerenciamento de consultas médicas',
     },

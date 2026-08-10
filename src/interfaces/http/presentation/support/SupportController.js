@@ -8,7 +8,7 @@ class SupportController {
     const { tipoSolicitacao, assunto, mensagem, currentUrl } = req.body;
     const userAgent = req.headers['user-agent'] || '';
 
-    await this.sendSupportEmailOperation.execute(doctor_id, {
+    const result = await this.sendSupportEmailOperation.execute(doctor_id, {
       tipoSolicitacao,
       assunto,
       mensagem,
@@ -16,7 +16,7 @@ class SupportController {
       userAgent,
     });
 
-    res.status(200).json({ ok: true });
+    res.status(200).json(result);
   }
 }
 
