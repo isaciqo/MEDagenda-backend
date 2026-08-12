@@ -50,4 +50,9 @@ appointmentSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 // multiplicador de custo de CPU/IO do Mongo que existe no sistema hoje.
 appointmentSchema.index({ doctor_id: 1, date: 1 });
 
+// findByPatientId (cascade de delete, export LGPD, e agora a tela de detalhe do
+// cliente) filtra só por 'patient.id' — já é seletivo o bastante sozinho, pois
+// patient_id é um UUID global único (não precisa compor com doctor_id).
+appointmentSchema.index({ 'patient.id': 1 });
+
 module.exports = mongoose.model('Appointment', appointmentSchema);

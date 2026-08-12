@@ -91,4 +91,18 @@ module.exports = [
       responses: { 200: { description: 'Full patient data export' }, 404: { description: 'Not found' } },
     },
   },
+  {
+    method: 'get',
+    path: '/patients/:patient_id/detail',
+    handler: 'patientController.detail',
+    middlewares: [authMiddleware],
+    validation: { params: patientSchema.getById },
+    swagger: {
+      tags: ['Patients'],
+      summary: 'Patient 360 view: summary, appointment history, reviews and financial total (sections gated by plan)',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'patient_id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Patient detail' }, 404: { description: 'Not found' } },
+    },
+  },
 ];

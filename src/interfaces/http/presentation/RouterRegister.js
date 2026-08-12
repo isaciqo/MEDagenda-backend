@@ -11,6 +11,7 @@ const patientRoutes = require('./patient/patientRoutes');
 const subscriptionRoutes = require('./subscription/subscriptionRoutes');
 const supportRoutes = require('./support/supportRoutes');
 const referralRoutes = require('./referral/referralRoutes');
+const leadRoutes = require('./lead/leadRoutes');
 const validationMiddleware = require('../middlewares/validationMiddleware');
 
 const API_PREFIX = '/api/v1';
@@ -44,6 +45,7 @@ const routerRegister = (app, container) => {
   registerRoutes(app, subscriptionRoutes, container);
   registerRoutes(app, supportRoutes, container);
   registerRoutes(app, referralRoutes, container);
+  registerRoutes(app, leadRoutes, container);
 };
 
 module.exports = routerRegister;

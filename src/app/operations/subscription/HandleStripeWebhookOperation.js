@@ -61,7 +61,7 @@ class HandleStripeWebhookOperation {
       plan,
       stripeCustomerId:     session.customer,
       stripeSubscriptionId: sub.id,
-      ...(periodEnd && { planExpiresAt: periodEnd }),
+      ...(periodEnd && { planExpiresAt: periodEnd, planWarningSentAt: null }),
       trialExpiresAt: null,
     });
 
@@ -78,7 +78,10 @@ class HandleStripeWebhookOperation {
 
     const updates = {};
     if (plan)      updates.plan          = plan;
-    if (periodEnd) updates.planExpiresAt = periodEnd;
+    if (periodEnd) {
+      updates.planExpiresAt    = periodEnd;
+      updates.planWarningSentAt = null; // novo ciclo — reabilita o aviso de expiração pra essa renovação
+    }
     if (!Object.keys(updates).length) return;
 
     await this.userRepository.update(user.user_id, updates);
@@ -97,6 +100,7 @@ class HandleStripeWebhookOperation {
     await this.userRepository.update(user.user_id, {
       stripeSubscriptionId: null,
       planExpiresAt: periodEnd,
+      planWarningSentAt: null, // cancelamento define um novo prazo final — precisa poder avisar de novo
     });
 
     logger.info(`Webhook: customer.subscription.deleted — user ${user.user_id}`);

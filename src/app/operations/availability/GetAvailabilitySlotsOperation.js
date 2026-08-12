@@ -1,9 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 
 class GetAvailabilitySlotsOperation {
-  constructor({ userRepository, appointmentRepository }) {
+  constructor({ userRepository, appointmentRepository, scheduleService }) {
     this.userRepository = userRepository;
     this.appointmentRepository = appointmentRepository;
+    this.scheduleService = scheduleService;
   }
 
   async execute({ doctor_id, from, to }) {
@@ -24,26 +25,24 @@ class GetAvailabilitySlotsOperation {
     );
     const bookedSlots = new Set(bookedAppointments.map(a => `${a.date}-${a.time}`));
 
-    const dayNames = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
     const schedule = doctor.schedule;
     const defaultDuration = doctor.defaultDuration || 30;
     const slots = [];
 
     const current = new Date(startDate);
     while (current <= endDate) {
-      const dayName = dayNames[current.getDay()];
-      const daySchedule = schedule instanceof Map ? schedule.get(dayName) : schedule[dayName];
+      const dateStr = current.toISOString().split('T')[0];
+      const daySchedule = this.scheduleService.getDaySchedule(schedule, dateStr);
 
-      if (daySchedule && daySchedule.enabled) {
-        const dateStr = current.toISOString().split('T')[0];
-        const slotTimes = this._generateSlots(daySchedule.start, daySchedule.end, defaultDuration);
+      if (daySchedule?.enabled) {
+        const slotTimes = this.scheduleService.generateDaySlots(daySchedule, defaultDuration);
 
         slotTimes.forEach(time => {
           slots.push({
             id: uuidv4(),
             date: dateStr,
             startTime: time,
-            endTime: this._addMinutes(time, defaultDuration),
+            endTime: this.scheduleService.addMinutes(time, defaultDuration),
             isBooked: bookedSlots.has(`${dateStr}-${time}`),
           });
         });
@@ -53,30 +52,6 @@ class GetAvailabilitySlotsOperation {
     }
 
     return slots;
-  }
-
-  _generateSlots(start, end, durationMinutes) {
-    const slots = [];
-    let [h, m] = start.split(':').map(Number);
-    const [endH, endM] = end.split(':').map(Number);
-    const endTotal = endH * 60 + endM;
-
-    while (h * 60 + m < endTotal) {
-      slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-      m += durationMinutes;
-      h += Math.floor(m / 60);
-      m = m % 60;
-    }
-
-    return slots;
-  }
-
-  _addMinutes(time, minutes) {
-    let [h, m] = time.split(':').map(Number);
-    m += minutes;
-    h += Math.floor(m / 60);
-    m = m % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 }
 

@@ -5,6 +5,7 @@ class PatientController {
     updatePatientOperation,
     deletePatientOperation,
     exportPatientDataOperation,
+    getPatientDetailOperation,
     auditService,
   }) {
     this.createPatientOperation = createPatientOperation;
@@ -12,6 +13,7 @@ class PatientController {
     this.updatePatientOperation = updatePatientOperation;
     this.deletePatientOperation = deletePatientOperation;
     this.exportPatientDataOperation = exportPatientDataOperation;
+    this.getPatientDetailOperation = getPatientDetailOperation;
     this.auditService = auditService;
   }
 
@@ -48,17 +50,26 @@ class PatientController {
   }
 
   async delete(req, res) {
-    const result = await this.deletePatientOperation.execute(
+    const { backupSnapshot, ...result } = await this.deletePatientOperation.execute(
       req.params.patient_id,
       req.user.user_id,
     );
+    // O snapshot (nome/telefone/anotações de antes da anonimização) fica só
+    // no audit log, nunca na resposta HTTP — é o "backup" pra conferir depois
+    // se precisar, sem reexpor o dado anonimizado no app.
     await this.auditService.log({
       actor_id: req.user.user_id,
       action: 'patient.delete',
       resource_type: 'patient',
       resource_id: req.params.patient_id,
       ip_address: req.ip,
+      metadata: backupSnapshot,
     });
+    res.status(200).json(result);
+  }
+
+  async detail(req, res) {
+    const result = await this.getPatientDetailOperation.execute(req.params.patient_id, req.user.user_id);
     res.status(200).json(result);
   }
 

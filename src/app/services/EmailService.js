@@ -97,6 +97,19 @@ class EmailService {
     `;
   }
 
+  // Rota de lead de clínica é pública (sem login) — diferente do resto dos
+  // e-mails, o texto que cai aqui dentro nunca passou por um usuário
+  // autenticado antes. Escapa antes de interpolar no HTML do e-mail pra
+  // fechar a superfície de HTML injection que um formulário público abre.
+  _escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   _ctaButton(url, label) {
     return `
       <div style="text-align:center;margin:12px 0 4px;">
@@ -183,6 +196,39 @@ class EmailService {
         }),
       },
       `aviso de trial expirando para ${email}`
+    );
+  }
+
+  async sendPlanExpiryWarning({ email, name, daysLeft, expiryDate, planName, renewUrl }) {
+    return this._send(
+      {
+        to: email,
+        subject: `Seu acesso ao CliniQ termina em ${daysLeft} dia${daysLeft !== 1 ? 's' : ''}`,
+        html: this._layout({
+          eyebrow: 'Assinatura cancelada',
+          title: `Olá, ${name}!`,
+          bodyHtml: `
+            <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
+              Sua assinatura do plano <strong style="color:#16233d;">${planName}</strong> foi cancelada e seu
+              acesso ao CliniQ Brasil termina em
+              <strong style="color:#16233d;">${daysLeft} dia${daysLeft !== 1 ? 's' : ''}</strong>,
+              no dia ${expiryDate}.
+            </p>
+
+            <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+              <p style="margin:0;font-size:13px;color:#92400e;line-height:1.5;">
+                ⚠️ Depois dessa data você não vai conseguir mais acessar sua agenda, clientes e histórico de consultas.
+              </p>
+            </div>
+
+            <p style="margin:0 0 16px;font-size:15px;color:#4b5f7e;line-height:1.6;">
+              Para continuar usando sem interrupção, reative sua assinatura:
+            </p>
+            ${this._ctaButton(renewUrl, 'Reativar assinatura')}
+          `,
+        }),
+      },
+      `aviso de plano expirando para ${email}`
     );
   }
 
@@ -310,6 +356,52 @@ class EmailService {
         }),
       },
       `confirmação de suporte para ${email}`
+    );
+  }
+
+  async sendClinicLeadEmail({ leadId, name, email, clinicName, professionalsCount, message }) {
+    const supportEmail = process.env.SUPPORT_EMAIL || this.fromEmail;
+    const safeName = this._escapeHtml(name);
+    const safeClinic = this._escapeHtml(clinicName || 'Não informado');
+    const safeCount = this._escapeHtml(professionalsCount || 'Não informado');
+    const safeMessage = this._escapeHtml(message);
+
+    return this._send(
+      {
+        to: supportEmail,
+        replyTo: `${safeName} <${email}>`,
+        subject: `[Lead clínica] ${safeClinic !== 'Não informado' ? safeClinic : safeName}`,
+        html: this._layout({
+          eyebrow: `Lead de clínica · ${leadId}`,
+          title: 'Alguém quer algo sob medida pra clínica',
+          bodyHtml: `
+            <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#4b5f7e;text-transform:uppercase;letter-spacing:0.05em;">Mensagem</p>
+            <div style="background:#f0f3fa;border:1px solid #d5deef;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+              <p style="margin:0;font-size:14px;color:#16233d;line-height:1.7;white-space:pre-wrap;">${safeMessage}</p>
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d5deef;border-radius:8px;overflow:hidden;font-size:12px;">
+              <tr style="background:#f0f3fa;">
+                <td style="padding:10px 16px;font-weight:600;color:#4b5f7e;width:120px;">Nome</td>
+                <td style="padding:10px 16px;color:#16233d;">${safeName}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-weight:600;color:#4b5f7e;border-top:1px solid #f0f3fa;">E-mail</td>
+                <td style="padding:10px 16px;color:#16233d;border-top:1px solid #f0f3fa;">${this._escapeHtml(email)}</td>
+              </tr>
+              <tr style="background:#f0f3fa;">
+                <td style="padding:10px 16px;font-weight:600;color:#4b5f7e;border-top:1px solid #f0f3fa;">Clínica</td>
+                <td style="padding:10px 16px;color:#16233d;border-top:1px solid #f0f3fa;">${safeClinic}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 16px;font-weight:600;color:#4b5f7e;border-top:1px solid #f0f3fa;">Profissionais</td>
+                <td style="padding:10px 16px;color:#16233d;border-top:1px solid #f0f3fa;">${safeCount}</td>
+              </tr>
+            </table>
+          `,
+          footerHtml: 'Responda este e-mail para falar diretamente com a pessoa.',
+        }),
+      },
+      `lead de clínica de ${email}`
     );
   }
 

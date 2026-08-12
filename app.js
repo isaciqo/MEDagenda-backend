@@ -111,6 +111,17 @@ const supportLimiter = rateLimit({
   message: { error: 'Muitas solicitações de suporte. Tente novamente mais tarde.' },
 });
 
+// /leads/clinic é pública (sem login, sem authMiddleware) e dispara e-mail de
+// verdade — mesmo risco de custo/abuso do supportLimiter, só que sem nem a
+// barreira de precisar de conta pra tentar martelar o endpoint.
+const clinicLeadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas solicitações. Tente novamente mais tarde.' },
+});
+
 // /auth/refresh não tinha limite — um refresh token vazado/roubado (vida de 7 dias)
 // podia ser usado em loop pra emitir access tokens sem nenhum freio. Limite mais
 // folgado que o authLimiter porque várias pessoas atrás do mesmo IP (ex: consultório
@@ -146,6 +157,7 @@ app.use('/api/v1/auth/refresh', refreshLimiter);
 app.use('/api/v1/subscriptions/checkout', checkoutLimiter);
 app.use('/api/v1/reviews', reviewsLimiter);
 app.use('/api/v1/support/send', supportLimiter);
+app.use('/api/v1/leads/clinic', clinicLeadLimiter);
 app.use('/api/v1/public/', publicLimiter);
 
 setupSwagger(app);
@@ -169,6 +181,16 @@ connectDatabase()
       }
     }, { timezone: 'America/Sao_Paulo' });
     logger.info('Cron: TrialWarningJob agendado para 09:00 BRT diariamente');
+
+    cron.schedule('15 9 * * *', async () => {
+      try {
+        const job = container.resolve('planExpiryWarningJob');
+        await job.run();
+      } catch (err) {
+        logger.error('PlanExpiryWarningJob: erro ao executar cron', { message: err.message });
+      }
+    }, { timezone: 'America/Sao_Paulo' });
+    logger.info('Cron: PlanExpiryWarningJob agendado para 09:15 BRT diariamente');
   })
   .catch((err) => {
     logger.error('Failed to connect to database', { message: err.message, stack: err.stack });

@@ -55,8 +55,21 @@ class AppointmentRepository {
     return Appointment.find({ 'patient.id': patient_id });
   }
 
-  async deleteByPatientId(patient_id) {
-    return Appointment.deleteMany({ 'patient.id': patient_id });
+  // Consultas que nunca aconteceram (ou foram canceladas) não têm valor
+  // financeiro/estatístico — seguro apagar de verdade ao remover o paciente.
+  async deleteNonRealizedByPatientId(patient_id) {
+    return Appointment.deleteMany({ 'patient.id': patient_id, status: { $ne: 'realizado' } });
+  }
+
+  // Consultas realizadas alimentam Financeiro/relatórios — ao remover o
+  // paciente, anonimiza em vez de apagar (LGPD Art. 12: dado anonimizado não
+  // é mais dado pessoal, satisfaz o direito ao esquecimento sem destruir o
+  // histórico de faturamento do médico).
+  async anonymizeRealizedByPatientId(patient_id) {
+    return Appointment.updateMany(
+      { 'patient.id': patient_id, status: 'realizado' },
+      { $set: { 'patient.name': 'Cliente removido', 'patient.phone': '', notes: '' } }
+    );
   }
 
   async cancelReturnAppointments(appointment_id) {

@@ -25,23 +25,13 @@ function generateSeriesDates(startDate, frequency) {
   return dates;
 }
 
-function parseTime(t) {
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function formatTime(mins) {
-  return `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
-}
-
-const DAY_KEYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-
 class CreateAppointmentSeriesOperation {
-  constructor({ appointmentRepository, patientRepository, userRepository, planService }) {
+  constructor({ appointmentRepository, patientRepository, userRepository, planService, scheduleService }) {
     this.appointmentRepository = appointmentRepository;
     this.patientRepository = patientRepository;
     this.userRepository = userRepository;
     this.planService = planService;
+    this.scheduleService = scheduleService;
   }
 
   async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, recurrence }) {
@@ -63,38 +53,64 @@ class CreateAppointmentSeriesOperation {
     const defaultDuration = user?.defaultDuration ?? 30;
     const schedule = user?.schedule;
 
+    // O fim da janela de busca precisa cobrir o máximo que uma sessão pode ser empurrada
+    // pra frente ao pular um dia fechado (findNextEnabledDate anda até 14 dias) — senão
+    // a checagem de conflito de horário fica cega pra agendamentos que já existem logo
+    // depois da última data-âncora da série.
+    const lastAnchorDate = new Date(dates[dates.length - 1] + 'T00:00:00');
+    lastAnchorDate.setDate(lastAnchorDate.getDate() + 14);
+
     const existingAppointments = await this.appointmentRepository.findAll({
       doctor_id,
       from: date,
-      to: dates[dates.length - 1],
+      to: lastAnchorDate.toISOString().split('T')[0],
     });
 
     const seriesId = uuidv4();
     const sessions = [];
 
     for (let i = 0; i < dates.length; i++) {
-      const sessionDate = dates[i];
+      const anchorDate = dates[i];
+      let sessionDate = anchorDate;
       let sessionTime = time;
       let sessionStatus = 'ok';
+      let originalDate;
+      let originalTime;
 
-      const conflict = existingAppointments.find(
-        a => a.date === sessionDate && a.time === sessionTime && a.status !== 'cancelado'
-      );
-
-      if (conflict) {
-        const adjusted = this._findNextFreeSlot(existingAppointments, sessionDate, sessionTime, defaultDuration, schedule);
-        if (adjusted !== sessionTime) {
-          const originalTime = sessionTime;
-          sessionTime = adjusted;
+      // Dia da semana fechado na agenda do médico (ex: recorrência mensal caindo num
+      // domingo) — pula pro próximo dia habilitado, sem mexer na âncora das próximas
+      // sessões, que continuam calculadas a partir de `date` original.
+      if (!this.scheduleService.isDayEnabled(schedule, sessionDate)) {
+        const nextEnabled = this.scheduleService.findNextEnabledDate(schedule, sessionDate);
+        if (nextEnabled) {
+          originalDate = sessionDate;
+          sessionDate = nextEnabled;
           sessionStatus = 'adjusted';
-          sessions.push({ appointmentId: null, date: sessionDate, time: sessionTime, status: sessionStatus, originalTime });
         } else {
           sessionStatus = 'conflict';
-          sessions.push({ appointmentId: null, date: sessionDate, time: sessionTime, status: sessionStatus });
         }
-      } else {
-        sessions.push({ appointmentId: null, date: sessionDate, time: sessionTime, status: sessionStatus });
       }
+
+      if (sessionStatus !== 'conflict') {
+        const conflict = existingAppointments.find(
+          a => a.date === sessionDate && a.time === sessionTime && a.status !== 'cancelado'
+        );
+        if (conflict) {
+          const adjustedTime = this.scheduleService.findNextFreeTime(existingAppointments, sessionDate, sessionTime, defaultDuration, schedule);
+          if (adjustedTime !== sessionTime) {
+            originalTime = sessionTime;
+            sessionTime = adjustedTime;
+            sessionStatus = 'adjusted';
+          } else {
+            sessionStatus = 'conflict';
+          }
+        }
+      }
+
+      const sessionRecord = { appointmentId: null, date: sessionDate, time: sessionTime, status: sessionStatus };
+      if (originalDate) sessionRecord.originalDate = originalDate;
+      if (originalTime) sessionRecord.originalTime = originalTime;
+      sessions.push(sessionRecord);
 
       const appointmentId = uuidv4();
       sessions[i].appointmentId = appointmentId;
@@ -125,27 +141,6 @@ class CreateAppointmentSeriesOperation {
     }
 
     return { seriesId, sessions };
-  }
-
-  _findNextFreeSlot(existingAppointments, date, startTime, duration, schedule) {
-    let timeMins = parseTime(startTime) + duration;
-
-    const dayKey = DAY_KEYS[new Date(date + 'T00:00:00').getDay()];
-    const endStr = schedule instanceof Map
-      ? schedule.get(dayKey)?.end ?? '23:00'
-      : (schedule?.[dayKey]?.end ?? '23:00');
-    const endMins = parseTime(endStr);
-
-    for (let i = 0; i < 20; i++) {
-      if (timeMins >= endMins) break;
-      const candidate = formatTime(timeMins);
-      const conflict = existingAppointments.find(
-        a => a.date === date && a.time === candidate && a.status !== 'cancelado'
-      );
-      if (!conflict) return candidate;
-      timeMins += duration;
-    }
-    return startTime;
   }
 
   async _resolvePatient({ doctor_id, patientId, patientName, patientPhone }) {
