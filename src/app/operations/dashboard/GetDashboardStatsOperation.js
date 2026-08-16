@@ -95,8 +95,9 @@ class GetDashboardStatsOperation {
     const presencial = active.filter(a => a.type === 'presencial').length;
     const online     = active.filter(a => a.type === 'online').length;
     return [
-      { name: 'Presencial', value: Math.round((presencial / total) * 100), fill: 'hsl(221, 83%, 53%)' },
-      { name: 'Online',     value: Math.round((online     / total) * 100), fill: 'hsl(142, 71%, 45%)' },
+      // Paleta única CliniQ (DESIGN_SYSTEM.md) — blue-500 e blue-300, não cores genéricas.
+      { name: 'Presencial', value: Math.round((presencial / total) * 100), fill: 'hsl(216, 40%, 37%)' },
+      { name: 'Online',     value: Math.round((online     / total) * 100), fill: 'hsl(215, 58%, 71%)' },
     ];
   }
 }
