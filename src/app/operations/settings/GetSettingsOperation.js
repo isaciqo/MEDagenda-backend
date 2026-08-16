@@ -15,6 +15,10 @@ class GetSettingsOperation {
       ? Object.fromEntries(user.schedule)
       : user.schedule;
 
+    const paymentMethodFees = user.paymentMethodFees instanceof Map
+      ? Object.fromEntries(user.paymentMethodFees)
+      : user.paymentMethodFees;
+
     return {
       name: user.name,
       specialty: user.specialty,
@@ -27,6 +31,7 @@ class GetSettingsOperation {
       defaultDuration: user.defaultDuration,
       defaultConsultationValue: user.defaultConsultationValue ?? 0,
       schedule,
+      paymentMethodFees,
     };
   }
 }

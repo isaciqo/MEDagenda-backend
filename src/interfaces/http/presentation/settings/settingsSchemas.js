@@ -63,6 +63,11 @@ const daySchema = Joi.object({
   'day.range': 'O horário de início deve ser anterior ao horário de término',
 });
 
+const paymentFeeSchema = Joi.object({
+  percentage: Joi.number().min(0).max(100).optional(),
+  fixed: Joi.number().min(0).optional(),
+});
+
 module.exports = () => ({
   update: Joi.object({
     name: Joi.string().optional(),
@@ -83,6 +88,12 @@ module.exports = () => ({
       sexta: daySchema,
       sabado: daySchema,
       domingo: daySchema,
+    }).optional(),
+    paymentMethodFees: Joi.object({
+      pix: paymentFeeSchema,
+      cartao: paymentFeeSchema,
+      dinheiro: paymentFeeSchema,
+      convenio: paymentFeeSchema,
     }).optional(),
   }),
 });

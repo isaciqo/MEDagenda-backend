@@ -13,6 +13,10 @@ const appointmentSchema = new mongoose.Schema({
   time: { type: String, required: true },
   estimatedValue: { type: Number, required: true },
   paidValue: { type: Number, default: null },
+  // Valor pago menos a taxa da forma de pagamento configurada em Settings no
+  // momento em que a consulta foi realizada — snapshot, não recalcula se a
+  // taxa mudar depois (evita reescrever histórico financeiro retroativamente).
+  netValue: { type: Number, default: null },
   paymentMethod: {
     type: String,
     enum: ['pix', 'cartao', 'dinheiro', 'convenio'],

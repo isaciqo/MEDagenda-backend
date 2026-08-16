@@ -6,6 +6,11 @@ const scheduleSchema = new mongoose.Schema({
   enabled: { type: Boolean, default: false },
 }, { _id: false });
 
+const paymentFeeSchema = new mongoose.Schema({
+  percentage: { type: Number, default: 0 },
+  fixed: { type: Number, default: 0 },
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -53,6 +58,16 @@ const userSchema = new mongoose.Schema({
       sexta: { start: '08:00', end: '18:00', enabled: true },
       sabado: { start: '08:00', end: '12:00', enabled: false },
       domingo: { start: '08:00', end: '12:00', enabled: false },
+    },
+  },
+  paymentMethodFees: {
+    type: Map,
+    of: paymentFeeSchema,
+    default: {
+      pix: { percentage: 0, fixed: 0 },
+      cartao: { percentage: 0, fixed: 0 },
+      dinheiro: { percentage: 0, fixed: 0 },
+      convenio: { percentage: 0, fixed: 0 },
     },
   },
 }, { timestamps: true });

@@ -23,12 +23,17 @@ class UpdateSettingsOperation {
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
     if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
     if (data.schedule !== undefined) updateData.schedule = data.schedule;
+    if (data.paymentMethodFees !== undefined) updateData.paymentMethodFees = data.paymentMethodFees;
 
     const updated = await this.userRepository.update(user_id, updateData);
 
     const schedule = updated.schedule instanceof Map
       ? Object.fromEntries(updated.schedule)
       : updated.schedule;
+
+    const paymentMethodFees = updated.paymentMethodFees instanceof Map
+      ? Object.fromEntries(updated.paymentMethodFees)
+      : updated.paymentMethodFees;
 
     return {
       name: updated.name,
@@ -42,6 +47,7 @@ class UpdateSettingsOperation {
       defaultDuration: updated.defaultDuration,
       defaultConsultationValue: updated.defaultConsultationValue ?? 0,
       schedule,
+      paymentMethodFees,
     };
   }
 }

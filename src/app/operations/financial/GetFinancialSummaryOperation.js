@@ -10,6 +10,9 @@ class GetFinancialSummaryOperation {
 
     const totalBilled   = realized.reduce((s, a) => s + (a.estimatedValue || 0), 0);
     const totalReceived = realized.reduce((s, a) => s + (a.paidValue || 0), 0);
+    // Consultas realizadas antes dessa feature não têm netValue salvo — cai
+    // de volta pro valor bruto (sem taxa), já que nenhuma taxa existia então.
+    const totalNet       = realized.reduce((s, a) => s + (a.netValue ?? a.paidValue ?? 0), 0);
 
     // F01: pendente nunca negativo (paidValue pode superar estimatedValue)
     const totalPending  = Math.max(0, totalBilled - totalReceived);
@@ -35,11 +38,13 @@ class GetFinancialSummaryOperation {
         patientName: a.patient.name,
         date: a.date,
         value: a.paidValue || 0,
+        netValue: a.netValue ?? (a.paidValue || 0),
+        paymentMethod: a.paymentMethod || null,
         paymentStatus: a.paidValue > 0 ? 'recebido' : 'pendente',
         type: a.type,
       }));
 
-    return { totalBilled, totalReceived, totalPending, averageTicket, presencialPercentage, chartData, entries };
+    return { totalBilled, totalReceived, totalNet, totalPending, averageTicket, presencialPercentage, chartData, entries };
   }
 
   // F04: aceita year para visão anual
