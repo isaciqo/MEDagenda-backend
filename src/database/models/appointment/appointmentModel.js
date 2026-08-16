@@ -26,6 +26,10 @@ const appointmentSchema = new mongoose.Schema({
   },
   notes: { type: String, default: '' },
   location: { type: String, default: '' },
+  // Duração em minutos — herda o padrão do médico na criação, mas fica editável
+  // por consulta a partir daí. null = consulta antiga, criada antes desse campo
+  // existir (o consumidor deve usar o defaultDuration do médico como fallback).
+  duration: { type: Number, default: null },
   meetingLink: { type: String, default: null },
   activeReviewLinkId: { type: String, default: null },
   reviewLinkExpires: { type: Date, default: null },

@@ -1,11 +1,14 @@
+const logger = require('../../../lib/logger');
+
 class UpdateAppointmentOperation {
-  constructor({ appointmentRepository, userRepository, planService }) {
+  constructor({ appointmentRepository, patientRepository, userRepository, planService }) {
     this.appointmentRepository = appointmentRepository;
+    this.patientRepository = patientRepository;
     this.userRepository = userRepository;
     this.planService = planService;
   }
 
-  async execute(appointment_id, doctor_id, { type, date, time, estimatedValue, notes }) {
+  async execute(appointment_id, doctor_id, { type, date, time, estimatedValue, notes, location, duration }) {
     const existing = await this.appointmentRepository.findById(appointment_id);
     if (!existing) {
       const error = new Error('Consulta não encontrada');
@@ -37,8 +40,25 @@ class UpdateAppointmentOperation {
     if (time !== undefined) updateData.time = time;
     if (estimatedValue !== undefined) updateData.estimatedValue = estimatedValue;
     if (notes !== undefined) updateData.notes = notes;
+    if (location !== undefined) updateData.location = location;
+    if (duration !== undefined) updateData.duration = duration;
 
     const updated = await this.appointmentRepository.update(appointment_id, updateData);
+
+    // Mesma lógica do CreateAppointmentOperation: mantém o "último local" do
+    // paciente sincronizado quando o médico corrige o endereço numa consulta já
+    // existente, não só na criação. Best-effort — não pode derrubar o update principal.
+    const effectiveType = type !== undefined ? type : existing.type;
+    if (location !== undefined && effectiveType === 'presencial' && location.trim()) {
+      try {
+        await this.patientRepository.update(existing.patient.id, { lastLocation: location });
+      } catch (err) {
+        logger.error('appointment.update: falha ao salvar lastLocation do paciente', {
+          patient_id: existing.patient.id,
+          error: err.message,
+        });
+      }
+    }
 
     return {
       id: updated.appointment_id,
@@ -52,6 +72,8 @@ class UpdateAppointmentOperation {
       paymentDate: updated.paymentDate,
       status: updated.status,
       notes: updated.notes,
+      location: updated.location || '',
+      duration: updated.duration ?? null,
       meetingLink: updated.meetingLink ?? null,
       isReturn: updated.isReturn ?? false,
       returnOf: updated.returnOf ?? null,

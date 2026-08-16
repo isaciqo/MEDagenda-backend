@@ -18,6 +18,7 @@ class ListAppointmentsOperation {
       status: a.status,
       notes: a.notes,
       location: a.location || '',
+      duration: a.duration ?? null,
       meetingLink: a.meetingLink ?? null,
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,

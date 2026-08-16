@@ -47,7 +47,7 @@ class CreateAppointmentOperation {
     }
   }
 
-  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, customMeetingLink, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, duration, customMeetingLink, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
     // ── Plan enforcement ───────────────────────────────────────────
     const user = await this.userRepository.findById(doctor_id);
     if (user) {
@@ -60,6 +60,10 @@ class CreateAppointmentOperation {
     }
     // ──────────────────────────────────────────────────────────────
 
+    // Herda o padrão do médico se não vier explícito — mas o valor é gravado de
+    // forma fixa na consulta a partir daqui (não muda depois se o padrão mudar).
+    const finalDuration = duration ?? user?.defaultDuration ?? 30;
+
     // A11: retorno não pode ser anterior à consulta principal
     if (returnDate && returnDate < date) {
       const error = new Error('A data do retorno deve ser igual ou posterior à data da consulta');
@@ -68,6 +72,21 @@ class CreateAppointmentOperation {
     }
 
     const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
+
+    // Lembra o último local presencial usado por este paciente — pré-preenche
+    // automaticamente da próxima vez que ele for selecionado (ver Agenda.tsx).
+    // Sempre sobrescreve com o mais recente, nunca acumula histórico. Best-effort:
+    // uma falha aqui não pode impedir a consulta principal de ser criada.
+    if (type === 'presencial' && location && location.trim()) {
+      try {
+        await this.patientRepository.update(patient.patient_id, { lastLocation: location });
+      } catch (err) {
+        logger.error('appointment.create: falha ao salvar lastLocation do paciente', {
+          patient_id: patient.patient_id,
+          error: err.message,
+        });
+      }
+    }
 
     const appointmentId = uuidv4();
     const appointment = await this.appointmentRepository.create({
@@ -84,6 +103,7 @@ class CreateAppointmentOperation {
       estimatedValue,
       notes: notes || '',
       location: type === 'presencial' ? (location || '') : '',
+      duration: finalDuration,
       status: 'agendado',
       expiresAt: getExpiresAt(),
     });
@@ -115,6 +135,7 @@ class CreateAppointmentOperation {
         estimatedValue: returnIsPaid ? (returnEstimatedValue ?? estimatedValue) : 0,
         notes: '',
         location: type === 'presencial' ? (location || '') : '',
+        duration: finalDuration,
         status: 'agendado',
         isReturn: true,
         returnOf: appointmentId,
@@ -175,6 +196,7 @@ class CreateAppointmentOperation {
       status: a.status,
       notes: a.notes,
       location: a.location || '',
+      duration: a.duration ?? null,
       meetingLink: a.meetingLink ?? null,
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
