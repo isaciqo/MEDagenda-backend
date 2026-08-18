@@ -19,6 +19,11 @@ class ListAppointmentsOperation {
       notes: a.notes,
       location: a.location || '',
       meetingLink: a.meetingLink ?? null,
+      rescheduleRequest: {
+        pending: !!a.rescheduleRequest?.pending,
+        requestedDate: a.rescheduleRequest?.requestedDate ?? null,
+        requestedTime: a.rescheduleRequest?.requestedTime ?? null,
+      },
       isReturn: a.isReturn ?? false,
       returnOf: a.returnOf ?? null,
       seriesId: a.seriesId ?? null,

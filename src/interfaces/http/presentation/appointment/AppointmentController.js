@@ -13,6 +13,8 @@ class AppointmentController {
     createAppointmentSeriesOperation,
     deleteAppointmentSeriesOperation,
     updateAppointmentSeriesOperation,
+    acceptRescheduleRequestOperation,
+    declineRescheduleRequestOperation,
     auditService,
   }) {
     this.createAppointmentOperation = createAppointmentOperation;
@@ -28,6 +30,8 @@ class AppointmentController {
     this.createAppointmentSeriesOperation = createAppointmentSeriesOperation;
     this.deleteAppointmentSeriesOperation = deleteAppointmentSeriesOperation;
     this.updateAppointmentSeriesOperation = updateAppointmentSeriesOperation;
+    this.acceptRescheduleRequestOperation = acceptRescheduleRequestOperation;
+    this.declineRescheduleRequestOperation = declineRescheduleRequestOperation;
     this.auditService = auditService;
   }
 
@@ -135,6 +139,16 @@ class AppointmentController {
       fromDate: req.query.from,
       data: req.body,
     });
+    res.status(200).json(result);
+  }
+
+  async acceptRescheduleRequest(req, res) {
+    const result = await this.acceptRescheduleRequestOperation.execute(req.params.id, req.user.user_id);
+    res.status(200).json(result);
+  }
+
+  async declineRescheduleRequest(req, res) {
+    const result = await this.declineRescheduleRequestOperation.execute(req.params.id, req.user.user_id);
     res.status(200).json(result);
   }
 }

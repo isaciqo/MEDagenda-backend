@@ -45,6 +45,11 @@ const meetingLinkTemplateSchema = makeTemplateSchema(
   'link_reuniao'
 );
 
+const rescheduleAcceptedTemplateSchema = makeTemplateSchema(
+  new Set(['cliente', 'profissional', 'medico', 'data', 'hora']),
+  'cliente, profissional, data, hora'
+);
+
 // CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end
 const timeSchema = Joi.string()
   .pattern(/^([0-1]\d|2[0-3]):[0-5]\d$/)
@@ -78,8 +83,10 @@ module.exports = () => ({
     reviewTemplate: reviewTemplateSchema,
     returnTemplate: returnTemplateSchema,
     meetingLinkTemplate: meetingLinkTemplateSchema,
+    rescheduleAcceptedTemplate: rescheduleAcceptedTemplateSchema,
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),
     defaultConsultationValue: Joi.number().min(0).optional(),
+    allowPatientReschedule: Joi.boolean().optional(),
     schedule: Joi.object({
       segunda: daySchema,
       terca: daySchema,

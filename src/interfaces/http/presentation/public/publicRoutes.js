@@ -13,6 +13,70 @@ const reviewSchema = Joi.object({
 
 module.exports = [
   {
+    method: 'get',
+    path: '/public/appointment/:token',
+    handler: 'publicController.appointmentInfo',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Public'],
+      summary: 'Buscar dados da consulta pelo link de confirmação (sem confirmar/alterar nada)',
+      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Dados da consulta' },
+        400: { description: 'Link inválido ou expirado' },
+      },
+    },
+  },
+  {
+    method: 'get',
+    path: '/public/week-schedule/:token',
+    handler: 'publicController.weekSchedule',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Public'],
+      summary: 'Buscar agenda do médico (horários livres e ocupados, genérico) para solicitação de remarcação',
+      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Agenda do médico' },
+        400: { description: 'Link inválido ou expirado' },
+      },
+    },
+  },
+  {
+    method: 'post',
+    path: '/public/reschedule-request/:token',
+    handler: 'publicController.requestReschedule',
+    middlewares: [],
+    validation: { body: rescheduleSchema },
+    swagger: {
+      tags: ['Public'],
+      summary: 'Solicitar remarcação de consulta (fica pendente até o médico aceitar/recusar)',
+      parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['date', 'time'],
+              properties: {
+                date: { type: 'string', example: '2025-08-20' },
+                time: { type: 'string', example: '10:00' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: 'Solicitação enviada' },
+        400: { description: 'Link inválido ou expirado' },
+        409: { description: 'Já existe solicitação pendente ou horário ocupado' },
+      },
+    },
+  },
+  {
     method: 'post',
     path: '/public/confirm/:token',
     handler: 'publicController.confirm',

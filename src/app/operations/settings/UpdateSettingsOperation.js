@@ -20,8 +20,10 @@ class UpdateSettingsOperation {
     if (data.reviewTemplate !== undefined) updateData.reviewTemplate = data.reviewTemplate;
     if (data.returnTemplate !== undefined) updateData.returnTemplate = data.returnTemplate;
     if (data.meetingLinkTemplate !== undefined) updateData.meetingLinkTemplate = data.meetingLinkTemplate;
+    if (data.rescheduleAcceptedTemplate !== undefined) updateData.rescheduleAcceptedTemplate = data.rescheduleAcceptedTemplate;
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
     if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
+    if (data.allowPatientReschedule !== undefined) updateData.allowPatientReschedule = data.allowPatientReschedule;
     if (data.schedule !== undefined) updateData.schedule = data.schedule;
     if (data.paymentMethodFees !== undefined) updateData.paymentMethodFees = data.paymentMethodFees;
 
@@ -44,8 +46,10 @@ class UpdateSettingsOperation {
       reviewTemplate: updated.reviewTemplate,
       returnTemplate: updated.returnTemplate,
       meetingLinkTemplate: updated.meetingLinkTemplate,
+      rescheduleAcceptedTemplate: updated.rescheduleAcceptedTemplate,
       defaultDuration: updated.defaultDuration,
       defaultConsultationValue: updated.defaultConsultationValue ?? 0,
+      allowPatientReschedule: updated.allowPatientReschedule ?? true,
       schedule,
       paymentMethodFees,
     };

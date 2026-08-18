@@ -52,7 +52,13 @@ class UpdateAppointmentOperation {
       paymentDate: updated.paymentDate,
       status: updated.status,
       notes: updated.notes,
+      location: updated.location || '',
       meetingLink: updated.meetingLink ?? null,
+      rescheduleRequest: {
+        pending: !!updated.rescheduleRequest?.pending,
+        requestedDate: updated.rescheduleRequest?.requestedDate ?? null,
+        requestedTime: updated.rescheduleRequest?.requestedTime ?? null,
+      },
       isReturn: updated.isReturn ?? false,
       returnOf: updated.returnOf ?? null,
       seriesId: updated.seriesId ?? null,

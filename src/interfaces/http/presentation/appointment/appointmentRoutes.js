@@ -222,4 +222,32 @@ module.exports = [
       responses: { 200: { description: 'Return link generated' } },
     },
   },
+  {
+    method: 'post',
+    path: '/appointments/:id/reschedule-request/accept',
+    handler: 'appointmentController.acceptRescheduleRequest',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.getById },
+    swagger: {
+      tags: ['Appointments'],
+      summary: 'Accept a patient-requested reschedule',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Reschedule accepted, appointment moved' } },
+    },
+  },
+  {
+    method: 'post',
+    path: '/appointments/:id/reschedule-request/decline',
+    handler: 'appointmentController.declineRescheduleRequest',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.getById },
+    swagger: {
+      tags: ['Appointments'],
+      summary: 'Decline a patient-requested reschedule',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Reschedule declined' } },
+    },
+  },
 ];

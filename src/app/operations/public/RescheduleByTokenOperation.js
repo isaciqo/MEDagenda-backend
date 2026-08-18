@@ -1,9 +1,11 @@
 const { v4: uuidv4 } = require('uuid');
 
 class RescheduleByTokenOperation {
-  constructor({ appointmentRepository, tokenService }) {
+  constructor({ appointmentRepository, tokenService, userRepository, scheduleService }) {
     this.appointmentRepository = appointmentRepository;
     this.tokenService = tokenService;
+    this.userRepository = userRepository;
+    this.scheduleService = scheduleService;
   }
 
   async execute(token, { date, time }) {
@@ -39,6 +41,16 @@ class RescheduleByTokenOperation {
     const today = new Date().toISOString().split('T')[0];
     if (date < today) {
       const error = new Error('A data do reagendamento deve ser futura');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Não deixa reagendar pra fora do expediente configurado (dia desabilitado
+    // ou horário fora do start/end) — sem isso, o paciente podia enviar
+    // qualquer date/time direto pra API, ignorando os slots oferecidos na tela.
+    const doctor = await this.userRepository.findById(old.doctor_id);
+    if (!this.scheduleService.isSlotOpen(doctor?.schedule, date, time)) {
+      const error = new Error('Esse horário está fora do expediente. Escolha outro.');
       error.statusCode = 400;
       throw error;
     }

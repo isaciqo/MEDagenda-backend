@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
   reviewTemplate: { type: String, default: 'Olá {cliente}, obrigado pela sua consulta! Deixe sua avaliação:\n\n{link}' },
   returnTemplate: { type: String, default: 'Olá {cliente}! {profissional} recomenda que você agende um retorno em {dias}. Entre em contato para marcar sua consulta de retorno.' },
   meetingLinkTemplate: { type: String, default: 'Olá {cliente}! Segue o link da nossa consulta online:\n{link_reuniao}' },
+  rescheduleAcceptedTemplate: { type: String, default: 'Olá {cliente}! Sua consulta com {profissional} foi remarcada para {data} às {hora}. Até lá!' },
   defaultDuration: { type: Number, default: 30 },
   defaultConsultationValue: { type: Number, default: 0 },
   tokenVersion: { type: Number, default: 0 },
@@ -47,6 +48,7 @@ const userSchema = new mongoose.Schema({
   referralRewardGrantedAt: { type: Date, default: null },
   pendingReferralCode: { type: String, default: null },
   followUpMode: { type: String, enum: ['paid_recurrence', 'return', 'free'], default: null },
+  allowPatientReschedule: { type: Boolean, default: true },
   schedule: {
     type: Map,
     of: scheduleSchema,

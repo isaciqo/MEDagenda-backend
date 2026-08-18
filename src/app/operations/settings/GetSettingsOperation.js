@@ -28,8 +28,10 @@ class GetSettingsOperation {
       reviewTemplate: user.reviewTemplate,
       returnTemplate: user.returnTemplate,
       meetingLinkTemplate: user.meetingLinkTemplate,
+      rescheduleAcceptedTemplate: user.rescheduleAcceptedTemplate,
       defaultDuration: user.defaultDuration,
       defaultConsultationValue: user.defaultConsultationValue ?? 0,
+      allowPatientReschedule: user.allowPatientReschedule ?? true,
       schedule,
       paymentMethodFees,
     };

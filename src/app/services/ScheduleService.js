@@ -74,6 +74,23 @@ class ScheduleService {
     return startTime;
   }
 
+  /**
+   * Sem duração própria por consulta, todo agendamento é tratado como ocupando
+   * `durationMinutes` (a duração padrão do médico) a partir do seu horário — por
+   * isso um conflito não é "mesmo horário exato", é qualquer sobreposição de
+   * intervalo (ex: consulta às 11:33 de 30min bloqueia 11:30 e 12:00 também).
+   */
+  hasOverlap(appointments, date, time, durationMinutes) {
+    const candidateStart = this._parseTime(time);
+    const candidateEnd = candidateStart + durationMinutes;
+    return appointments.some(a => {
+      if (a.date !== date || a.status === 'cancelado') return false;
+      const bookedStart = this._parseTime(a.time);
+      const bookedEnd = bookedStart + durationMinutes;
+      return candidateStart < bookedEnd && candidateEnd > bookedStart;
+    });
+  }
+
   _parseTime(t) {
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;

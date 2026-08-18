@@ -5,12 +5,33 @@ class PublicController {
     rescheduleByTokenOperation,
     getReviewInfoByLinkOperation,
     submitReviewByLinkOperation,
+    getPublicAppointmentInfoOperation,
+    getPublicWeekScheduleOperation,
+    requestRescheduleByTokenOperation,
   }) {
     this.confirmByIdOperation = confirmByIdOperation;
     this.getPublicSlotsOperation = getPublicSlotsOperation;
     this.rescheduleByTokenOperation = rescheduleByTokenOperation;
     this.getReviewInfoByLinkOperation = getReviewInfoByLinkOperation;
     this.submitReviewByLinkOperation = submitReviewByLinkOperation;
+    this.getPublicAppointmentInfoOperation = getPublicAppointmentInfoOperation;
+    this.getPublicWeekScheduleOperation = getPublicWeekScheduleOperation;
+    this.requestRescheduleByTokenOperation = requestRescheduleByTokenOperation;
+  }
+
+  async appointmentInfo(req, res) {
+    const result = await this.getPublicAppointmentInfoOperation.execute(req.params.token);
+    res.status(200).json(result);
+  }
+
+  async weekSchedule(req, res) {
+    const result = await this.getPublicWeekScheduleOperation.execute(req.params.token);
+    res.status(200).json(result);
+  }
+
+  async requestReschedule(req, res) {
+    const result = await this.requestRescheduleByTokenOperation.execute(req.params.token, req.body);
+    res.status(200).json(result);
   }
 
   async confirm(req, res) {

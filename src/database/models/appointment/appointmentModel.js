@@ -31,6 +31,14 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
   location: { type: String, default: '' },
   meetingLink: { type: String, default: null },
+  // Solicitação de remarcação feita pelo paciente pelo link de confirmação. Fica pendente
+  // até o médico aceitar (aplica date/time) ou recusar — nunca aplicada automaticamente.
+  rescheduleRequest: {
+    pending: { type: Boolean, default: false },
+    requestedDate: { type: String, default: null },
+    requestedTime: { type: String, default: null },
+    requestedAt: { type: Date, default: null },
+  },
   activeReviewLinkId: { type: String, default: null },
   reviewLinkExpires: { type: Date, default: null },
   rescheduleCount: { type: Number, default: 0 },
