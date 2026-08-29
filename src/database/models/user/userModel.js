@@ -6,7 +6,9 @@ const scheduleSchema = new mongoose.Schema({
   enabled: { type: Boolean, default: false },
 }, { _id: false });
 
-const paymentFeeSchema = new mongoose.Schema({
+const paymentMethodSchema = new mongoose.Schema({
+  id: { type: String, required: true },
+  label: { type: String, required: true },
   percentage: { type: Number, default: 0 },
   fixed: { type: Number, default: 0 },
 }, { _id: false });
@@ -62,15 +64,24 @@ const userSchema = new mongoose.Schema({
       domingo: { start: '08:00', end: '12:00', enabled: false },
     },
   },
+  // Lista editável pelo médico (adicionar/renomear/remover formas de
+  // pagamento). Sem `default` de propósito: se tivesse, o Mongoose aplicaria
+  // esse default na leitura de QUALQUER conta que nunca salvou esse campo —
+  // inclusive as que só têm o formato antigo (paymentMethodFees) configurado
+  // com valores reais — mascarando a necessidade de migrar. A resolução do
+  // default/migração acontece em src/lib/paymentMethods.js (resolvePaymentMethods).
+  paymentMethods: {
+    type: [paymentMethodSchema],
+  },
+  // Formato antigo (taxa fixa por chave pix/cartao_debito/cartao_credito/
+  // dinheiro/convenio) — mantido só pra contas que configuraram antes dessa
+  // mudança existir; GetSettingsOperation migra pro campo acima na leitura.
   paymentMethodFees: {
     type: Map,
-    of: paymentFeeSchema,
-    default: {
-      pix: { percentage: 0, fixed: 0 },
-      cartao: { percentage: 0, fixed: 0 },
-      dinheiro: { percentage: 0, fixed: 0 },
-      convenio: { percentage: 0, fixed: 0 },
-    },
+    of: new mongoose.Schema({
+      percentage: { type: Number, default: 0 },
+      fixed: { type: Number, default: 0 },
+    }, { _id: false }),
   },
 }, { timestamps: true });
 

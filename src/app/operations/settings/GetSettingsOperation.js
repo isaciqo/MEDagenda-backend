@@ -1,3 +1,5 @@
+const { resolvePaymentMethods } = require('../../../lib/paymentMethods');
+
 class GetSettingsOperation {
   constructor({ userRepository }) {
     this.userRepository = userRepository;
@@ -15,10 +17,6 @@ class GetSettingsOperation {
       ? Object.fromEntries(user.schedule)
       : user.schedule;
 
-    const paymentMethodFees = user.paymentMethodFees instanceof Map
-      ? Object.fromEntries(user.paymentMethodFees)
-      : user.paymentMethodFees;
-
     return {
       name: user.name,
       specialty: user.specialty,
@@ -33,7 +31,7 @@ class GetSettingsOperation {
       defaultConsultationValue: user.defaultConsultationValue ?? 0,
       allowPatientReschedule: user.allowPatientReschedule ?? true,
       schedule,
-      paymentMethodFees,
+      paymentMethods: resolvePaymentMethods(user),
     };
   }
 }

@@ -172,7 +172,7 @@ module.exports = [
               required: ['paidValue', 'paymentMethod', 'paymentDate'],
               properties: {
                 paidValue: { type: 'number', example: 350 },
-                paymentMethod: { type: 'string', enum: ['pix', 'cartao', 'dinheiro', 'convenio'] },
+                paymentMethod: { type: 'string', description: 'Id de uma forma de pagamento configurada pelo médico', example: 'pix_dinheiro' },
                 paymentDate: { type: 'string', example: '2025-08-15' },
               },
             },

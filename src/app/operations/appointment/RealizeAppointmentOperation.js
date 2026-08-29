@@ -1,4 +1,5 @@
 const logger = require('../../../lib/logger');
+const { resolvePaymentMethods } = require('../../../lib/paymentMethods');
 
 class RealizeAppointmentOperation {
   constructor({ appointmentRepository, userRepository }) {
@@ -31,9 +32,11 @@ class RealizeAppointmentOperation {
 
     // netValue é um snapshot da taxa configurada em Settings no momento do
     // recebimento — não recalcula depois se o médico mudar a taxa (não
-    // reescreve histórico financeiro retroativamente).
-    const netValue = await this._computeNetValue(doctor_id, paidValue, paymentMethod);
-    if (netValue === null) {
+    // reescreve histórico financeiro retroativamente). O rótulo salvo no
+    // appointment também é um snapshot: se o médico renomear ou remover essa
+    // forma de pagamento depois, o histórico continua mostrando o nome de então.
+    const resolved = await this._resolvePayment(doctor_id, paidValue, paymentMethod);
+    if (resolved === null) {
       const error = new Error('A taxa configurada para essa forma de pagamento é maior que o valor pago.');
       error.statusCode = 400;
       throw error;
@@ -42,16 +45,16 @@ class RealizeAppointmentOperation {
     const a = await this.appointmentRepository.update(appointment_id, {
       status: 'realizado',
       paidValue,
-      paymentMethod,
+      paymentMethod: resolved.label,
       paymentDate,
-      netValue,
+      netValue: resolved.netValue,
     });
 
     logger.info('appointment.realize: consulta realizada', {
       appointment_id,
       doctor_id,
       paidValue,
-      paymentMethod,
+      paymentMethod: resolved.label,
     });
 
     return {
@@ -70,20 +73,27 @@ class RealizeAppointmentOperation {
     };
   }
 
-  // Retorna null (em vez de lançar) quando a taxa configurada supera o valor
-  // pago — deixa o caller decidir como reportar isso pro cliente.
-  async _computeNetValue(doctor_id, paidValue, paymentMethod) {
-    if (!paidValue || !paymentMethod) return paidValue || 0;
+  // Resolve o id de forma de pagamento enviado pro rótulo + valor líquido
+  // configurados NAQUELE momento. Retorna null (em vez de lançar) quando a
+  // taxa configurada supera o valor pago — deixa o caller decidir como
+  // reportar isso pro cliente. Se o id não bater com nenhuma forma de
+  // pagamento atual (ex: foi removida entre o carregamento da tela e o
+  // envio), guarda o valor enviado como rótulo mesmo assim, sem taxa.
+  async _resolvePayment(doctor_id, paidValue, paymentMethodId) {
+    if (!paidValue || !paymentMethodId) {
+      return { label: paymentMethodId || null, netValue: paidValue || 0 };
+    }
 
     const doctor = await this.userRepository.findById(doctor_id);
-    const fees = doctor?.paymentMethodFees;
-    const feeConfig = fees instanceof Map ? fees.get(paymentMethod) : fees?.[paymentMethod];
-    if (!feeConfig) return paidValue;
+    const method = resolvePaymentMethods(doctor).find(m => m.id === paymentMethodId);
+    if (!method) {
+      return { label: paymentMethodId, netValue: paidValue };
+    }
 
     // As duas taxas se somam: percentual sobre o valor pago + valor fixo.
-    const fee = (paidValue * (feeConfig.percentage || 0)) / 100 + (feeConfig.fixed || 0);
+    const fee = (paidValue * (method.percentage || 0)) / 100 + (method.fixed || 0);
     if (fee > paidValue) return null;
-    return Math.max(0, paidValue - fee);
+    return { label: method.label, netValue: Math.max(0, paidValue - fee) };
   }
 }
 

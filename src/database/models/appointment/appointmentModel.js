@@ -17,11 +17,11 @@ const appointmentSchema = new mongoose.Schema({
   // momento em que a consulta foi realizada — snapshot, não recalcula se a
   // taxa mudar depois (evita reescrever histórico financeiro retroativamente).
   netValue: { type: Number, default: null },
-  paymentMethod: {
-    type: String,
-    enum: ['pix', 'cartao', 'dinheiro', 'convenio'],
-    default: null,
-  },
+  // Guarda o rótulo (label) da forma de pagamento no momento da realização,
+  // não um id — o médico pode renomear/remover formas de pagamento depois, e
+  // o histórico não deve mudar retroativamente. Sem enum de propósito: a
+  // lista de formas de pagamento agora é editável por médico, não fixa.
+  paymentMethod: { type: String, default: null },
   paymentDate: { type: String, default: null },
   status: {
     type: String,

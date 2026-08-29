@@ -1,54 +1,22 @@
 const Joi = require('joi');
 
-const makeTemplateSchema = (allowedVars, displayVars, requiredVar) => Joi.string().custom((value, helpers) => {
-  const matches = [...value.matchAll(/\{([^}]+)\}/g)];
-  const used = matches.map(m => m[1].trim());
-  const invalid = used.filter(v => !allowedVars.has(v));
-
-  if (invalid.length > 0) {
-    const invalidDisplay = invalid.map(v => `{${v}}`).join(', ');
-    return helpers.error('template.invalidVar', { invalidDisplay });
-  }
-
-  if (requiredVar && !used.includes(requiredVar)) {
+// Só o link (quando existe) é obrigatório — qualquer outro texto é livre. Um
+// "{algo}" não reconhecido simplesmente não é substituído na hora de montar a
+// mensagem (fica literal), não é motivo pra bloquear o salvamento.
+const makeTemplateSchema = (requiredVar) => Joi.string().custom((value, helpers) => {
+  if (requiredVar && !value.includes(`{${requiredVar}}`)) {
     return helpers.error('template.missingRequired');
   }
-
   return value;
 }).optional().messages({
-  'template.invalidVar': `Variável(is) inválida(s) no template: {{#invalidDisplay}}. Use apenas: ${displayVars}.`,
   'template.missingRequired': `O template precisa incluir a variável "${requiredVar}".`,
 });
 
-// 'nome' aceito como alias legado de 'cliente', 'medico' como alias legado de 'profissional' —
-// templates salvos antes das renomeações continuam válidos.
-const whatsappTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'nome', 'data', 'hora', 'profissional', 'medico', 'link', 'endereco', 'link_reuniao']),
-  'cliente, data, hora, profissional, link, endereco, link_reuniao',
-  'link'
-);
-
-const reviewTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'link']),
-  'cliente, link',
-  'link'
-);
-
-const returnTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'profissional', 'medico', 'dias']),
-  'cliente, profissional, dias'
-);
-
-const meetingLinkTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'profissional', 'medico', 'link_reuniao']),
-  'cliente, profissional, link_reuniao',
-  'link_reuniao'
-);
-
-const rescheduleAcceptedTemplateSchema = makeTemplateSchema(
-  new Set(['cliente', 'profissional', 'medico', 'data', 'hora']),
-  'cliente, profissional, data, hora'
-);
+const whatsappTemplateSchema = makeTemplateSchema('link');
+const reviewTemplateSchema = makeTemplateSchema('link');
+const returnTemplateSchema = makeTemplateSchema();
+const meetingLinkTemplateSchema = makeTemplateSchema('link_reuniao');
+const rescheduleAcceptedTemplateSchema = makeTemplateSchema();
 
 // CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end
 const timeSchema = Joi.string()
@@ -68,7 +36,10 @@ const daySchema = Joi.object({
   'day.range': 'O horário de início deve ser anterior ao horário de término',
 });
 
-const paymentFeeSchema = Joi.object({
+// Lista dinâmica: o médico decide o id/rótulo, não é mais um enum fixo.
+const paymentMethodItemSchema = Joi.object({
+  id: Joi.string().min(1).required(),
+  label: Joi.string().min(1).max(60).required(),
   percentage: Joi.number().min(0).max(100).optional(),
   fixed: Joi.number().min(0).optional(),
 });
@@ -96,11 +67,6 @@ module.exports = () => ({
       sabado: daySchema,
       domingo: daySchema,
     }).optional(),
-    paymentMethodFees: Joi.object({
-      pix: paymentFeeSchema,
-      cartao: paymentFeeSchema,
-      dinheiro: paymentFeeSchema,
-      convenio: paymentFeeSchema,
-    }).optional(),
+    paymentMethods: Joi.array().items(paymentMethodItemSchema).optional(),
   }),
 });
