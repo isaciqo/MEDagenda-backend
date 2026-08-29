@@ -10,7 +10,7 @@ class CreateUserOperation {
     this.emailService = emailService;
   }
 
-  async execute({ name, email, password, referralCode = null }) {
+  async execute({ name, email, password, referralCode = null, termsAccepted = false }) {
     logger.info('register: tentativa de cadastro', { email });
 
     // Trial de 30 dias com feature-set completo é caro de dar de graça em escala —
@@ -31,6 +31,14 @@ class CreateUserOperation {
       throw err;
     }
 
+    // Defesa em profundidade: a rota já valida isso via Joi (authSchemas.js),
+    // mas a operação não deveria confiar cegamente em quem a chama.
+    if (!termsAccepted) {
+      const err = new Error('É necessário aceitar a Política de Privacidade para criar uma conta.');
+      err.statusCode = 400;
+      throw err;
+    }
+
     const hashedPassword = await this.hashPasswordService.hash(password);
 
     const trialExpiresAt = new Date();
@@ -45,6 +53,7 @@ class CreateUserOperation {
       plan: 'trial',
       trialExpiresAt,
       pendingReferralCode: referralCode || null,
+      termsAcceptedAt: new Date(),
     });
 
     logger.info('register: usuário criado', { email, user_id: user.user_id });

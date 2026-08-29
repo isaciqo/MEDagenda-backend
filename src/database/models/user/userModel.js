@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   isConfirmed: { type: Boolean, default: false },
+  // Registro de consentimento (LGPD): quando a conta foi criada, precisa ter
+  // aceitado a Política de Privacidade. Null só acontece em conta legada,
+  // criada antes desse campo existir.
+  termsAcceptedAt: { type: Date, default: null },
   resetPasswordToken: { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null },
   pendingEmail: { type: String, default: null },

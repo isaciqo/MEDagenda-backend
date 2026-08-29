@@ -10,7 +10,7 @@ class GoogleAuthOperation {
     this.emailService      = emailService;
   }
 
-  async execute(credential) {
+  async execute(credential, termsAccepted = false) {
     const { googleId, email, name, picture } = await this.googleAuthService.verifyToken(credential);
 
     logger.info('google-auth: tentativa', { email });
@@ -29,7 +29,14 @@ class GoogleAuthOperation {
         });
         logger.info('google-auth: conta vinculada', { email });
       } else {
-        // 3. Novo usuário via Google → cria conta não confirmada
+        // 3. Novo usuário via Google → precisa do mesmo consentimento exigido
+        // no cadastro manual antes de criar a conta. Sem isso, devolve um sinal
+        // pro frontend pedir o aceite e tentar de novo — não cria nada ainda.
+        if (!termsAccepted) {
+          logger.info('google-auth: novo usuário sem aceite dos termos — aguardando confirmação', { email });
+          return { needsTermsAcceptance: true };
+        }
+
         const trialExpiresAt = new Date();
         trialExpiresAt.setDate(trialExpiresAt.getDate() + 30);
 
@@ -45,6 +52,7 @@ class GoogleAuthOperation {
           photoUrl:       picture,
           plan:           'trial',
           trialExpiresAt,
+          termsAcceptedAt: new Date(),
         });
 
         logger.info('google-auth: novo usuário criado', { email, user_id: user.user_id });

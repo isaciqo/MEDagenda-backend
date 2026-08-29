@@ -66,11 +66,18 @@ class AuthController {
   }
 
   async googleAuth(req, res) {
-    const { credential } = req.body;
+    const { credential, termsAccepted } = req.body;
     if (!credential) {
       return res.status(400).json({ message: 'Credencial do Google ausente.' });
     }
-    const result = await this.googleAuthOperation.execute(credential);
+    const result = await this.googleAuthOperation.execute(credential, !!termsAccepted);
+
+    if (result.needsTermsAcceptance) {
+      return res.status(200).json({
+        needsTermsAcceptance: true,
+        message: 'Você precisa aceitar a Política de Privacidade para criar uma conta.',
+      });
+    }
 
     if (result.needsConfirmation) {
       return res.status(200).json({

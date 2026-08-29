@@ -16,11 +16,22 @@ module.exports = () => ({
     password: passwordSchema,
     name: Joi.string().optional(),
     referralCode: Joi.string().length(8).uppercase().optional(),
+    termsAccepted: Joi.boolean().valid(true).required().messages({
+      'any.only': 'É necessário aceitar a Política de Privacidade para criar uma conta.',
+      'any.required': 'É necessário aceitar a Política de Privacidade para criar uma conta.',
+    }),
   }),
 
   login: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
+  }),
+
+  googleAuth: Joi.object({
+    credential: Joi.string().required(),
+    // Só é exigido de fato quando a conta ainda não existe — ver GoogleAuthOperation.
+    // Aqui é só o formato: se vier, tem que ser boolean.
+    termsAccepted: Joi.boolean().optional(),
   }),
 
   forgotPassword: Joi.object({

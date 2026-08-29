@@ -138,7 +138,7 @@ module.exports = [
     path: '/auth/google',
     handler: 'authController.googleAuth',
     middlewares: [],
-    validation: {},
+    validation: { body: authSchema.googleAuth },
     swagger: {
       tags: ['Auth'],
       summary: 'Login / registro via Google OAuth',
@@ -149,7 +149,10 @@ module.exports = [
             schema: {
               type: 'object',
               required: ['credential'],
-              properties: { credential: { type: 'string', description: 'Google ID token (JWT)' } },
+              properties: {
+                credential: { type: 'string', description: 'Google ID token (JWT)' },
+                termsAccepted: { type: 'boolean', description: 'Obrigatório (true) quando a conta ainda não existe' },
+              },
             },
           },
         },
