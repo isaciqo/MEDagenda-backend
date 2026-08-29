@@ -31,9 +31,9 @@ class GoogleAuthOperation {
       } else {
         // 3. Novo usuário via Google → precisa do mesmo consentimento exigido
         // no cadastro manual antes de criar a conta. Sem isso, devolve um sinal
-        // pro frontend pedir o aceite e tentar de novo — não cria nada ainda.
+        // pro frontend pedir o aceite e tentar de novo, sem criar nada ainda.
         if (!termsAccepted) {
-          logger.info('google-auth: novo usuário sem aceite dos termos — aguardando confirmação', { email });
+          logger.info('google-auth: novo usuário sem aceite dos termos, aguardando confirmação', { email });
           return { needsTermsAcceptance: true };
         }
 
