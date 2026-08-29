@@ -41,7 +41,7 @@ class RequestEmailChangeOperation {
     }
 
     if (isDisposableEmail(newEmail)) {
-      const err = new Error('Não aceitamos e-mails temporários/descartáveis. Use um e-mail válido.');
+      const err = new Error('Não aceitamos e-mails temporários ou descartáveis. Use um e-mail válido.');
       err.statusCode = 400;
       throw err;
     }

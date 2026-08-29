@@ -20,7 +20,7 @@ module.exports = [
     validation: {},
     swagger: {
       tags: ['Public'],
-      summary: 'Buscar dados da consulta pelo link de confirmação (sem confirmar/alterar nada)',
+      summary: 'Buscar dados da consulta pelo link de confirmação (sem confirmar ou alterar nada)',
       parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
       responses: {
         200: { description: 'Dados da consulta' },
@@ -52,7 +52,7 @@ module.exports = [
     validation: { body: rescheduleSchema },
     swagger: {
       tags: ['Public'],
-      summary: 'Solicitar remarcação de consulta (fica pendente até o médico aceitar/recusar)',
+      summary: 'Solicitar remarcação de consulta (fica pendente até o médico aceitar ou recusar)',
       parameters: [{ in: 'path', name: 'token', required: true, schema: { type: 'string' } }],
       requestBody: {
         required: true,

@@ -155,7 +155,7 @@ class EmailService {
     return this._send(
       {
         to: email,
-        subject: `Seu período de teste termina em ${daysLeft} dia${daysLeft !== 1 ? 's' : ''} — CliniQ`,
+        subject: `CliniQ: seu período de teste termina em ${daysLeft} dia${daysLeft !== 1 ? 's' : ''}`,
         html: this._layout({
           eyebrow: 'Seu plano',
           title: `Olá, ${name}!`,
@@ -343,7 +343,7 @@ class EmailService {
               Recebemos sua solicitação de suporte (${tipoSolicitacao}) e vamos responder o quanto antes.
             </p>
             <p style="margin:0 0 20px;font-size:13px;color:#9aa8bf;">
-              Número do chamado: <strong style="color:#16233d;font-family:monospace;">${ticketId}</strong> — guarde essa referência.
+              Número do chamado: <strong style="color:#16233d;font-family:monospace;">${ticketId}</strong>. Guarde essa referência.
             </p>
             <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#4b5f7e;text-transform:uppercase;letter-spacing:0.05em;">Assunto</p>
             <p style="margin:0 0 16px;font-size:14px;color:#16233d;">${assunto}</p>

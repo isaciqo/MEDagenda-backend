@@ -238,7 +238,7 @@ module.exports = [
     validation: { params: userSchema.getUserById, body: userSchema.requestEmailChange },
     swagger: {
       tags: ['Users'],
-      summary: 'Request an email change — sends a confirmation link to the new address',
+      summary: 'Request an email change, sends a confirmation link to the new address',
       security: [{ BearerAuth: [] }],
       parameters: [{ in: 'path', name: 'user_id', required: true, schema: { type: 'string' } }],
       requestBody: {

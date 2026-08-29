@@ -18,7 +18,7 @@ class CreateUserOperation {
     // (ver ANALISE_ABUSO_CUSTO.md, Business-Flow-04).
     if (isDisposableEmail(email)) {
       logger.warn('register: domínio de e-mail descartável bloqueado', { email });
-      const err = new Error('Não aceitamos e-mails temporários/descartáveis. Use um e-mail válido.');
+      const err = new Error('Não aceitamos e-mails temporários ou descartáveis. Use um e-mail válido.');
       err.statusCode = 400;
       throw err;
     }
