@@ -1,10 +1,15 @@
 const Joi = require('joi');
+const phoneSchema = require('../shared/phoneSchema');
 
 module.exports = () => ({
   create: Joi.object({
     patientId: Joi.string().optional(),
     patientName: Joi.string().required(),
-    patientPhone: Joi.string().optional().allow(''),
+    patientPhone: phoneSchema({ required: false, allowEmpty: true }),
+    // true quando o médico escolheu explicitamente "criar cliente separado"
+    // no popup de divergência (editou nome/telefone de um cliente já
+    // selecionado) — pula a busca por nome e sempre cria um cadastro novo.
+    forceNewPatient: Joi.boolean().optional(),
     type: Joi.string().valid('presencial', 'online').required(),
     date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
     time: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
@@ -29,7 +34,9 @@ module.exports = () => ({
 
   realize: Joi.object({
     paidValue: Joi.number().min(0).required(),
-    paymentMethod: Joi.string().valid('pix', 'cartao', 'dinheiro', 'convenio').required(),
+    // Id de uma das formas de pagamento configuradas pelo médico (lista
+    // dinâmica, editável em Settings) — não é mais um enum fixo.
+    paymentMethod: Joi.string().min(1).required(),
     paymentDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
   }),
 
@@ -51,7 +58,8 @@ module.exports = () => ({
   createSeries: Joi.object({
     patientId: Joi.string().optional(),
     patientName: Joi.string().required(),
-    patientPhone: Joi.string().optional().allow(''),
+    patientPhone: phoneSchema({ required: false, allowEmpty: true }),
+    forceNewPatient: Joi.boolean().optional(),
     type: Joi.string().valid('presencial', 'online').required(),
     date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
     time: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),

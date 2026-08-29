@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../../lib/logger');
+const { resolvePatientForAppointment } = require('../../../lib/resolvePatient');
 
 const EXPIRY_YEARS = parseInt(process.env.APPOINTMENT_EXPIRY_YEARS) || 2;
 
@@ -47,7 +48,7 @@ class CreateAppointmentOperation {
     }
   }
 
-  async execute({ doctor_id, patientId, patientName, patientPhone, type, date, time, estimatedValue, notes, location, customMeetingLink, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
+  async execute({ doctor_id, patientId, patientName, patientPhone, forceNewPatient, type, date, time, estimatedValue, notes, location, customMeetingLink, returnDate, returnTime, returnEstimatedValue, returnIsPaid = true }) {
     // ── Plan enforcement ───────────────────────────────────────────
     const user = await this.userRepository.findById(doctor_id);
     if (user) {
@@ -67,7 +68,7 @@ class CreateAppointmentOperation {
       throw error;
     }
 
-    const patient = await this._resolvePatient({ doctor_id, patientId, patientName, patientPhone });
+    const patient = await resolvePatientForAppointment(this.patientRepository, { doctor_id, patientId, patientName, patientPhone, forceNewPatient });
 
     const appointmentId = uuidv4();
     const appointment = await this.appointmentRepository.create({
@@ -132,33 +133,6 @@ class CreateAppointmentOperation {
     }
 
     return this._format(appointment);
-  }
-
-  async _resolvePatient({ doctor_id, patientId, patientName, patientPhone }) {
-    if (patientId) {
-      const found = await this.patientRepository.findById(patientId);
-      if (found) return found;
-    }
-
-    if (patientPhone) {
-      const byPhone = await this.patientRepository.findByPhone(doctor_id, patientPhone);
-      if (byPhone) return byPhone;
-    }
-
-    // A12: busca case-insensitive para evitar duplicatas por variação de maiúsculas
-    const byName = await this.patientRepository.findByExactName(doctor_id, patientName);
-    if (byName) return byName;
-
-    const sameNameCount = await this.patientRepository.countByName(doctor_id, patientName);
-    const displayName = sameNameCount === 0 ? patientName : `${patientName} (paciente ${sameNameCount + 1})`;
-
-    return await this.patientRepository.create({
-      patient_id: uuidv4(),
-      doctor_id,
-      name: patientName,
-      phone: patientPhone || '',
-      displayName,
-    });
   }
 
   _format(a) {
