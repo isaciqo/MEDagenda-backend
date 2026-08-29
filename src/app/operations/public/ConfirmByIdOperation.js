@@ -26,6 +26,15 @@ class ConfirmByIdOperation {
       };
     }
 
+    // A16: confirmTokenExpires existia no banco mas nunca era checado, então o link
+    // nunca expirava de fato. Só se aplica aqui: se já está confirmado/realizado
+    // (branch acima) ou cancelado, a expiração é irrelevante.
+    if (appointment.confirmTokenExpires && appointment.confirmTokenExpires < new Date()) {
+      const error = new Error('Link de confirmação expirado. Entre em contato para confirmar sua presença.');
+      error.statusCode = 400;
+      throw error;
+    }
+
     await this.appointmentRepository.update(appointment.appointment_id, {
       status: 'confirmado',
       confirmToken: null,
