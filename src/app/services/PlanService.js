@@ -35,7 +35,7 @@ class PlanService {
     if (effective === 'expired') {
       const err = new Error(
         user.plan === 'trial'
-          ? 'Seu período gratuito de 30 dias expirou. Escolha um plano para continuar agendando.'
+          ? 'Seu período gratuito de 15 dias expirou. Escolha um plano para continuar agendando.'
           : 'Sua assinatura expirou. Renove seu plano para continuar agendando.'
       );
       err.statusCode = 402;

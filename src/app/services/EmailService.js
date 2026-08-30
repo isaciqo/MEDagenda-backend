@@ -232,19 +232,22 @@ class EmailService {
     );
   }
 
-  async sendWelcomeEmail({ email, name }) {
+  // trialDays vem calculado de trialExpiresAt (ver EmailConfirmationOperation)
+  // porque não é sempre o mesmo número: quem chega por indicação válida ganha
+  // mais tempo de trial (TRIAL_REFERRED_DAYS, ver src/lib/trialPeriod.js).
+  async sendWelcomeEmail({ email, name, trialDays }) {
     const loginUrl = `${this.frontendUrl}/login`;
 
     return this._send(
       {
         to: email,
-        subject: 'Boas-vindas ao CliniQ Brasil! Seu trial de 30 dias começou.',
+        subject: `Boas-vindas ao CliniQ Brasil! Seu trial de ${trialDays} dias começou.`,
         html: this._layout({
           eyebrow: 'Conta confirmada',
           title: `Bem-vindo(a), ${name}!`,
           bodyHtml: `
             <p style="margin:0 0 12px;font-size:15px;color:#4b5f7e;line-height:1.6;">
-              Sua conta foi confirmada com sucesso. Seu período de teste gratuito de 30 dias está ativo!
+              Sua conta foi confirmada com sucesso. Seu período de teste gratuito de ${trialDays} dias está ativo!
             </p>
             <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
               Organize sua agenda, cadastre clientes e experimente todas as funcionalidades sem custo.

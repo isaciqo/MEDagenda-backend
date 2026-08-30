@@ -46,7 +46,13 @@ class EmailConfirmationOperation {
 
     // AU04: e-mail de boas-vindas após confirmação
     try {
-      await this.emailService.sendWelcomeEmail({ email: user.email, name: user.name });
+      // Calcula os dias restantes a partir de trialExpiresAt em vez de
+      // assumir um número fixo: quem se cadastrou por indicação válida ganha
+      // mais dias de trial na hora do cadastro (ver src/lib/trialPeriod.js).
+      const trialDays = user.trialExpiresAt
+        ? Math.max(1, Math.round((new Date(user.trialExpiresAt) - Date.now()) / (24 * 60 * 60 * 1000)))
+        : 15;
+      await this.emailService.sendWelcomeEmail({ email: user.email, name: user.name, trialDays });
     } catch (err) {
       logger.error('email-confirmation: falha ao enviar e-mail de boas-vindas', { email: user.email, error: err.message });
     }
