@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const logger = require('../../../lib/logger');
+const { computeTrialExpiresAt } = require('../../../lib/trialPeriod');
 
 class GoogleAuthOperation {
   constructor({ googleAuthService, userRepository, tokenService, emailService }) {
@@ -10,7 +11,7 @@ class GoogleAuthOperation {
     this.emailService      = emailService;
   }
 
-  async execute(credential, termsAccepted = false) {
+  async execute(credential, termsAccepted = false, referralCode = null) {
     const { googleId, email, name, picture } = await this.googleAuthService.verifyToken(credential);
 
     logger.info('google-auth: tentativa', { email });
@@ -37,8 +38,13 @@ class GoogleAuthOperation {
           return { needsTermsAcceptance: true };
         }
 
-        const trialExpiresAt = new Date();
-        trialExpiresAt.setDate(trialExpiresAt.getDate() + 30);
+        // Mesma regra do cadastro manual: trial maior pra quem chegou por um
+        // link de indicação válido (ver CreateUserOperation e trialPeriod.js).
+        // pendingReferralCode fica salvo pra EmailConfirmationOperation creditar
+        // o indicador assim que essa conta confirmar o e-mail, do mesmo jeito
+        // que já acontece pra quem se cadastra pelo formulário normal.
+        const referrer = referralCode ? await this.userRepository.findByReferralCode(referralCode) : null;
+        const trialExpiresAt = computeTrialExpiresAt(!!referrer);
 
         const unusableHash = await bcrypt.hash(uuidv4(), 10);
 
@@ -52,6 +58,7 @@ class GoogleAuthOperation {
           photoUrl:       picture,
           plan:           'trial',
           trialExpiresAt,
+          pendingReferralCode: referralCode || null,
           termsAcceptedAt: new Date(),
         });
 

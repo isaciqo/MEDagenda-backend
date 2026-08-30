@@ -29,9 +29,10 @@ module.exports = () => ({
 
   googleAuth: Joi.object({
     credential: Joi.string().required(),
-    // Só é exigido de fato quando a conta ainda não existe — ver GoogleAuthOperation.
-    // Aqui é só o formato: se vier, tem que ser boolean.
+    // Só é exigido de fato quando a conta ainda não existe. Aqui é só o
+    // formato: se vier, tem que ser boolean. Ver GoogleAuthOperation.
     termsAccepted: Joi.boolean().optional(),
+    referralCode: Joi.string().length(8).uppercase().optional(),
   }),
 
   forgotPassword: Joi.object({

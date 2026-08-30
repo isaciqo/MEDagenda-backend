@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../../../lib/logger');
 const { isDisposableEmail } = require('../../../lib/disposableEmail');
+const { computeTrialExpiresAt } = require('../../../lib/trialPeriod');
 
 class CreateUserOperation {
   constructor({ userRepository, hashPasswordService, tokenService, emailService }) {
@@ -13,8 +14,8 @@ class CreateUserOperation {
   async execute({ name, email, password, referralCode = null, termsAccepted = false }) {
     logger.info('register: tentativa de cadastro', { email });
 
-    // Trial de 30 dias com feature-set completo é caro de dar de graça em escala —
-    // e-mail descartável é o jeito mais barato de fabricar contas trial infinitas
+    // Trial com feature-set completo é caro de dar de graça em escala. E-mail
+    // descartável é o jeito mais barato de fabricar contas trial infinitas
     // (ver ANALISE_ABUSO_CUSTO.md, Business-Flow-04).
     if (isDisposableEmail(email)) {
       logger.warn('register: domínio de e-mail descartável bloqueado', { email });
@@ -41,8 +42,11 @@ class CreateUserOperation {
 
     const hashedPassword = await this.hashPasswordService.hash(password);
 
-    const trialExpiresAt = new Date();
-    trialExpiresAt.setDate(trialExpiresAt.getDate() + 30);
+    // Trial maior pra quem chega por um link de indicação válido. Só conta
+    // se o código realmente corresponder a um médico existente, não basta
+    // vir preenchido no formulário.
+    const referrer = referralCode ? await this.userRepository.findByReferralCode(referralCode) : null;
+    const trialExpiresAt = computeTrialExpiresAt(!!referrer);
 
     const user = await this.userRepository.create({
       user_id: uuidv4(),

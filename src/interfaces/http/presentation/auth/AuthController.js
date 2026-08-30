@@ -66,11 +66,11 @@ class AuthController {
   }
 
   async googleAuth(req, res) {
-    const { credential, termsAccepted } = req.body;
+    const { credential, termsAccepted, referralCode } = req.body;
     if (!credential) {
       return res.status(400).json({ message: 'Credencial do Google ausente.' });
     }
-    const result = await this.googleAuthOperation.execute(credential, !!termsAccepted);
+    const result = await this.googleAuthOperation.execute(credential, !!termsAccepted, referralCode || null);
 
     if (result.needsTermsAcceptance) {
       return res.status(200).json({
