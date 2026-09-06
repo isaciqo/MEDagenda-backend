@@ -17,6 +17,7 @@ const reviewTemplateSchema = makeTemplateSchema('link');
 const returnTemplateSchema = makeTemplateSchema();
 const meetingLinkTemplateSchema = makeTemplateSchema('link_reuniao');
 const rescheduleAcceptedTemplateSchema = makeTemplateSchema();
+const pixMessageTemplateSchema = makeTemplateSchema('chave');
 
 // CF03: valida horas semanticamente (00–23) e minutos (00–59), e garante start < end
 const timeSchema = Joi.string()
@@ -44,6 +45,15 @@ const paymentMethodItemSchema = Joi.object({
   fixed: Joi.number().min(0).optional(),
 });
 
+// Config de recebimento via Pix. Limites: 77 = campo 01 do template 26 no
+// EMV/BR Code; 25 e 15 = campos 59 (nome) e 60 (cidade).
+const pixConfigSchema = Joi.object({
+  key: Joi.string().trim().max(77).allow('').optional(),
+  keyType: Joi.string().valid('cpf', 'cnpj', 'email', 'phone', 'evp', '').optional(),
+  receiverName: Joi.string().trim().max(25).allow('').optional(),
+  receiverCity: Joi.string().trim().max(15).allow('').optional(),
+});
+
 module.exports = () => ({
   update: Joi.object({
     name: Joi.string().optional(),
@@ -55,6 +65,7 @@ module.exports = () => ({
     returnTemplate: returnTemplateSchema,
     meetingLinkTemplate: meetingLinkTemplateSchema,
     rescheduleAcceptedTemplate: rescheduleAcceptedTemplateSchema,
+    pixMessageTemplate: pixMessageTemplateSchema,
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),
     defaultConsultationValue: Joi.number().min(0).optional(),
     allowPatientReschedule: Joi.boolean().optional(),
@@ -68,5 +79,6 @@ module.exports = () => ({
       domingo: daySchema,
     }).optional(),
     paymentMethods: Joi.array().items(paymentMethodItemSchema).optional(),
+    pix: pixConfigSchema.optional(),
   }),
 });

@@ -1,4 +1,5 @@
 const { resolvePaymentMethods } = require('../../../lib/paymentMethods');
+const { resolvePixConfig } = require('../../../lib/pixConfig');
 
 class GetSettingsOperation {
   constructor({ userRepository }) {
@@ -27,11 +28,13 @@ class GetSettingsOperation {
       returnTemplate: user.returnTemplate,
       meetingLinkTemplate: user.meetingLinkTemplate,
       rescheduleAcceptedTemplate: user.rescheduleAcceptedTemplate,
+      pixMessageTemplate: user.pixMessageTemplate,
       defaultDuration: user.defaultDuration,
       defaultConsultationValue: user.defaultConsultationValue ?? 0,
       allowPatientReschedule: user.allowPatientReschedule ?? true,
       schedule,
       paymentMethods: resolvePaymentMethods(user),
+      pix: resolvePixConfig(user),
     };
   }
 }

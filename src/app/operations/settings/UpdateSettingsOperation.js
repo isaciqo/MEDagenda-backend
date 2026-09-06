@@ -1,4 +1,5 @@
 const { resolvePaymentMethods, DEFAULT_PAYMENT_METHODS } = require('../../../lib/paymentMethods');
+const { resolvePixConfig } = require('../../../lib/pixConfig');
 
 class UpdateSettingsOperation {
   constructor({ userRepository }) {
@@ -23,6 +24,7 @@ class UpdateSettingsOperation {
     if (data.returnTemplate !== undefined) updateData.returnTemplate = data.returnTemplate;
     if (data.meetingLinkTemplate !== undefined) updateData.meetingLinkTemplate = data.meetingLinkTemplate;
     if (data.rescheduleAcceptedTemplate !== undefined) updateData.rescheduleAcceptedTemplate = data.rescheduleAcceptedTemplate;
+    if (data.pixMessageTemplate !== undefined) updateData.pixMessageTemplate = data.pixMessageTemplate;
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
     if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
     if (data.allowPatientReschedule !== undefined) updateData.allowPatientReschedule = data.allowPatientReschedule;
@@ -43,6 +45,17 @@ class UpdateSettingsOperation {
       updateData.paymentMethods = [...data.paymentMethods, ...missingDefaults];
     }
 
+    // Config de recebimento via Pix: substitui o objeto inteiro (o front manda
+    // sempre os 4 campos). A chave Pix não é sigilosa, então não tem cifragem.
+    if (data.pix !== undefined) {
+      updateData.pix = {
+        key: data.pix.key || '',
+        keyType: data.pix.keyType || '',
+        receiverName: data.pix.receiverName || '',
+        receiverCity: data.pix.receiverCity || '',
+      };
+    }
+
     const updated = await this.userRepository.update(user_id, updateData);
 
     const schedule = updated.schedule instanceof Map
@@ -59,11 +72,13 @@ class UpdateSettingsOperation {
       returnTemplate: updated.returnTemplate,
       meetingLinkTemplate: updated.meetingLinkTemplate,
       rescheduleAcceptedTemplate: updated.rescheduleAcceptedTemplate,
+      pixMessageTemplate: updated.pixMessageTemplate,
       defaultDuration: updated.defaultDuration,
       defaultConsultationValue: updated.defaultConsultationValue ?? 0,
       allowPatientReschedule: updated.allowPatientReschedule ?? true,
       schedule,
       paymentMethods: resolvePaymentMethods(updated),
+      pix: resolvePixConfig(updated),
     };
   }
 }

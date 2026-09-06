@@ -12,6 +12,8 @@ const subscriptionRoutes = require('./subscription/subscriptionRoutes');
 const supportRoutes = require('./support/supportRoutes');
 const referralRoutes = require('./referral/referralRoutes');
 const leadRoutes = require('./lead/leadRoutes');
+const locationRoutes = require('./location/locationRoutes');
+const shiftRoutes = require('./shift/shiftRoutes');
 const validationMiddleware = require('../middlewares/validationMiddleware');
 
 const API_PREFIX = '/api/v1';
@@ -46,6 +48,8 @@ const routerRegister = (app, container) => {
   registerRoutes(app, supportRoutes, container);
   registerRoutes(app, referralRoutes, container);
   registerRoutes(app, leadRoutes, container);
+  registerRoutes(app, locationRoutes, container);
+  registerRoutes(app, shiftRoutes, container);
 };
 
 module.exports = routerRegister;

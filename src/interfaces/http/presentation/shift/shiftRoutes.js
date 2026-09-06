@@ -1,0 +1,155 @@
+const authMiddleware = require('../../middlewares/authMiddleware');
+const shiftSchema = require('./shiftSchemas')();
+
+module.exports = [
+  {
+    method: 'post',
+    path: '/shifts/series',
+    handler: 'shiftController.createSeries',
+    middlewares: [authMiddleware],
+    validation: { body: shiftSchema.createSeries },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Create a recurring series of plantão shifts',
+      security: [{ BearerAuth: [] }],
+      responses: { 201: { description: 'Series created' } },
+    },
+  },
+  {
+    method: 'delete',
+    path: '/shifts/series/:seriesId',
+    handler: 'shiftController.deleteSeries',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.seriesId, query: shiftSchema.seriesFrom },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Delete future (not yet realized) shifts in a series',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Series shifts deleted' } },
+    },
+  },
+  {
+    method: 'patch',
+    path: '/shifts/series/:seriesId',
+    handler: 'shiftController.updateSeries',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.seriesId, query: shiftSchema.seriesFrom, body: shiftSchema.updateSeries },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Bulk-update future (not yet realized) shifts in a series',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Series shifts updated' } },
+    },
+  },
+  {
+    method: 'post',
+    path: '/shifts',
+    handler: 'shiftController.create',
+    middlewares: [authMiddleware],
+    validation: { body: shiftSchema.create },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Create a single plantão shift',
+      security: [{ BearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['locationId', 'date', 'time', 'endDate', 'endTime', 'estimatedValue'],
+              properties: {
+                locationId: { type: 'string' },
+                date: { type: 'string', example: '2026-09-20' },
+                time: { type: 'string', example: '22:00' },
+                endDate: { type: 'string', example: '2026-09-21' },
+                endTime: { type: 'string', example: '10:00' },
+                estimatedValue: { type: 'number', example: 800 },
+                notes: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      responses: { 201: { description: 'Shift created' } },
+    },
+  },
+  {
+    method: 'get',
+    path: '/shifts',
+    handler: 'shiftController.list',
+    middlewares: [authMiddleware],
+    validation: { query: shiftSchema.list },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'List shifts',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'List of shifts' } },
+    },
+  },
+  {
+    method: 'get',
+    path: '/shifts/:id',
+    handler: 'shiftController.getById',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.getById },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Get shift by ID',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Shift data' }, 404: { description: 'Not found' } },
+    },
+  },
+  {
+    method: 'delete',
+    path: '/shifts/:id',
+    handler: 'shiftController.delete',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.getById },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Delete a shift',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Shift deleted' } },
+    },
+  },
+  {
+    method: 'patch',
+    path: '/shifts/:id',
+    handler: 'shiftController.update',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.getById, body: shiftSchema.update },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Update shift fields',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Shift updated' } },
+    },
+  },
+  {
+    method: 'patch',
+    path: '/shifts/:id/cancel',
+    handler: 'shiftController.cancel',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.getById },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Cancel a shift',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Shift cancelled' } },
+    },
+  },
+  {
+    method: 'patch',
+    path: '/shifts/:id/realize',
+    handler: 'shiftController.realize',
+    middlewares: [authMiddleware],
+    validation: { params: shiftSchema.getById, body: shiftSchema.realize },
+    swagger: {
+      tags: ['Shifts'],
+      summary: 'Mark shift as realized (with payment)',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Shift realized' } },
+    },
+  },
+];

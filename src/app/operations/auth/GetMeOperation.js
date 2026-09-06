@@ -29,6 +29,8 @@ class GetMeOperation {
       createdAt: user.createdAt,
       onboardingCompleted: user.onboardingCompleted ?? false,
       followUpMode: user.followUpMode ?? null,
+      plantaoEnabled: user.plantaoEnabled ?? false,
+      consultaEnabled: user.consultaEnabled ?? true,
       isGoogleLinked: !!user.googleId,
       pendingEmail: user.pendingEmail ?? null,
       pendingEmailRequestedAt: user.pendingEmailRequestedAt ?? null,

@@ -13,6 +13,16 @@ const paymentMethodSchema = new mongoose.Schema({
   fixed: { type: Number, default: 0 },
 }, { _id: false });
 
+// Config de recebimento via Pix: a chave do médico e os dados do recebedor
+// (nome/cidade) usados pra montar o "Pix copia e cola" no frontend. Sem
+// gateway e sem confirmação automática de pagamento, é só um facilitador.
+const pixConfigSchema = new mongoose.Schema({
+  key: { type: String, default: '' },
+  keyType: { type: String, enum: ['cpf', 'cnpj', 'email', 'phone', 'evp', ''], default: '' },
+  receiverName: { type: String, default: '' },
+  receiverCity: { type: String, default: '' },
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -36,6 +46,7 @@ const userSchema = new mongoose.Schema({
   returnTemplate: { type: String, default: 'Olá {cliente}! {profissional} recomenda que você agende um retorno em {dias}. Entre em contato para marcar sua consulta de retorno.' },
   meetingLinkTemplate: { type: String, default: 'Olá {cliente}! Segue o link da nossa consulta online:\n{link_reuniao}' },
   rescheduleAcceptedTemplate: { type: String, default: 'Olá {cliente}! Sua consulta com {profissional} foi remarcada para {data} às {hora}. Até lá!' },
+  pixMessageTemplate: { type: String, default: 'Olá {cliente}! Para pagar sua consulta ({valor}), faça um Pix para a chave {chave} ({nome_recebedor}). Depois me envie o comprovante, por favor.' },
   defaultDuration: { type: Number, default: 30 },
   defaultConsultationValue: { type: Number, default: 0 },
   tokenVersion: { type: Number, default: 0 },
@@ -55,6 +66,19 @@ const userSchema = new mongoose.Schema({
   pendingReferralCode: { type: String, default: null },
   followUpMode: { type: String, enum: ['paid_recurrence', 'return', 'free'], default: null },
   allowPatientReschedule: { type: Boolean, default: true },
+  // Fixado como "ambos" (true) já na criação da conta — se a pessoa pular o
+  // onboarding inteiro, continua com acesso a tudo, sem precisar ativar nada
+  // depois. Controla se a aba de Plantão aparece na Agenda, se a cor aparece
+  // na tela de Locais, e se o financeiro/dashboard consulta a coleção Shift.
+  // Escalar com default é seguro aqui (o cuidado documentado em paymentMethods
+  // logo abaixo é especificamente sobre default em ARRAY).
+  plantaoEnabled: { type: Boolean, default: true },
+  // Junto com plantaoEnabled, define o "modo de atendimento": consultaEnabled
+  // false + plantaoEnabled true = só plantão (esconde Clientes/Avaliações na
+  // navegação, some com as seções de consulta em Configurações). Default true
+  // também — conta nova nasce em "ambos" (os dois true), e só vira "só
+  // plantão" se a pessoa desativar consulta depois, de propósito.
+  consultaEnabled: { type: Boolean, default: true },
   schedule: {
     type: Map,
     of: scheduleSchema,
@@ -87,6 +111,9 @@ const userSchema = new mongoose.Schema({
       fixed: { type: Number, default: 0 },
     }, { _id: false }),
   },
+  // Aqui `default` é seguro (não é array mascarando migração legada como
+  // paymentMethods): garante que o GET de settings sempre devolve o shape.
+  pix: { type: pixConfigSchema, default: () => ({}) },
 }, { timestamps: true });
 
 userSchema.index({ plan: 1, trialExpiresAt: 1, trialWarningSentAt: 1, isConfirmed: 1 });
