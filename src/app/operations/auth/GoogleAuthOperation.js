@@ -4,11 +4,12 @@ const logger = require('../../../lib/logger');
 const { computeTrialExpiresAt } = require('../../../lib/trialPeriod');
 
 class GoogleAuthOperation {
-  constructor({ googleAuthService, userRepository, tokenService, emailService }) {
-    this.googleAuthService = googleAuthService;
-    this.userRepository    = userRepository;
-    this.tokenService      = tokenService;
-    this.emailService      = emailService;
+  constructor({ googleAuthService, userRepository, tokenService, emailService, processReferralOperation }) {
+    this.googleAuthService        = googleAuthService;
+    this.userRepository           = userRepository;
+    this.tokenService             = tokenService;
+    this.emailService             = emailService;
+    this.processReferralOperation = processReferralOperation;
   }
 
   async execute(credential, termsAccepted = false, referralCode = null) {
@@ -34,15 +35,15 @@ class GoogleAuthOperation {
         // no cadastro manual antes de criar a conta. Sem isso, devolve um sinal
         // pro frontend pedir o aceite e tentar de novo, sem criar nada ainda.
         if (!termsAccepted) {
-          logger.info('google-auth: novo usuário sem aceite dos termos, aguardando confirmação', { email });
+          logger.info('google-auth: novo usuário sem aceite dos termos', { email });
           return { needsTermsAcceptance: true };
         }
 
         // Mesma regra do cadastro manual: trial maior pra quem chegou por um
         // link de indicação válido (ver CreateUserOperation e trialPeriod.js).
-        // pendingReferralCode fica salvo pra EmailConfirmationOperation creditar
-        // o indicador assim que essa conta confirmar o e-mail, do mesmo jeito
-        // que já acontece pra quem se cadastra pelo formulário normal.
+        // pendingReferralCode é gravado aqui e creditado logo abaixo, junto com
+        // a confirmação imediata da conta (o fluxo manual faz isso só quando o
+        // e-mail é confirmado, em EmailConfirmationOperation).
         const referrer = referralCode ? await this.userRepository.findByReferralCode(referralCode) : null;
         const trialExpiresAt = computeTrialExpiresAt(!!referrer);
 
@@ -66,20 +67,43 @@ class GoogleAuthOperation {
       }
     }
 
-    // Se a conta ainda não foi confirmada, envia e-mail e bloqueia o login
+    // O Google já entrega o e-mail verificado (GoogleAuthService.verifyToken
+    // rejeita qualquer token sem email_verified), então não faz sentido um
+    // segundo passo de confirmação por e-mail: seria fricção à toa e prende o
+    // usuário fora da conta que ele acabou de criar. Confirma na hora.
+    //
+    // Isso vale tanto pro usuário novo (criado logo acima com isConfirmed:false)
+    // quanto pra uma conta manual pré-existente que nunca confirmou: o login com
+    // Google no mesmo e-mail prova a posse da caixa. Fora do fluxo Google, o
+    // cadastro manual continua exigindo a confirmação por e-mail normalmente.
     if (!user.isConfirmed) {
-      const confirmToken = this.tokenService.generateTempToken({ email: user.email }, '1h');
-      try {
-        await this.emailService.sendConfirmationEmail({
-          email: user.email,
-          name:  user.name,
-          token: confirmToken,
-        });
-        logger.info('google-auth: e-mail de confirmação enviado', { email });
-      } catch (err) {
-        logger.error('google-auth: falha ao enviar e-mail de confirmação', { email, error: err.message });
+      await this.userRepository.update(user.user_id, { isConfirmed: true });
+      logger.info('google-auth: conta confirmada via Google', { email });
+
+      // O cadastro manual credita a indicação na confirmação do e-mail
+      // (EmailConfirmationOperation). Como aqui a conta já nasce confirmada,
+      // processa a indicação pendente na hora e limpa o código.
+      if (user.pendingReferralCode) {
+        try {
+          await this.processReferralOperation.execute({
+            code: user.pendingReferralCode,
+            referredUserId: user.user_id,
+          });
+          await this.userRepository.update(user.user_id, { pendingReferralCode: null });
+        } catch (err) {
+          logger.warn('google-auth: falha ao processar indicação pendente', { error: err.message });
+        }
       }
-      return { needsConfirmation: true };
+
+      // Mesmo e-mail de boas-vindas que o cadastro manual dispara ao confirmar.
+      try {
+        const trialDays = user.trialExpiresAt
+          ? Math.max(1, Math.round((new Date(user.trialExpiresAt) - Date.now()) / (24 * 60 * 60 * 1000)))
+          : 15;
+        await this.emailService.sendWelcomeEmail({ email: user.email, name: user.name, trialDays });
+      } catch (err) {
+        logger.error('google-auth: falha ao enviar e-mail de boas-vindas', { email, error: err.message });
+      }
     }
 
     // Conta confirmada → emite JWT
