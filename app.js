@@ -28,6 +28,11 @@ app.use(requestContextMiddleware);
 
 app.use(helmet());
 
+// Precisa vir antes da rota do webhook (e de tudo mais), senão o webhook do Stripe
+// nunca aparece nos logs de request — ele só lê req.method/path/ip e reage a
+// res.on('finish'), nunca toca o body, então não interfere no raw body abaixo.
+app.use(requestLogger);
+
 // Stripe webhook must receive raw body — register before express.json()
 app.post('/api/v1/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res, next) => {
   const operation = container.resolve('handleStripeWebhookOperation');
@@ -37,7 +42,6 @@ app.post('/api/v1/webhooks/stripe', express.raw({ type: 'application/json' }), (
 });
 
 app.use(express.json());
-app.use(requestLogger);
 
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
