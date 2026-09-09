@@ -65,7 +65,7 @@ class CreateUserOperation {
     const confirmToken = this.tokenService.generateTempToken({ email }, '1h');
 
     if (process.env.NODE_ENV !== 'production') {
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+      const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').split(',')[0].trim();
       logger.info(`[DEV] Confirmar email → ${frontendUrl}/confirm-email?token=${confirmToken}`);
     }
 

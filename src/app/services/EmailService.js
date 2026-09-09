@@ -4,7 +4,10 @@ const logger = require('../../lib/logger');
 class EmailService {
   constructor() {
     this.resend = new Resend(process.env.RESEND_API_KEY);
-    this.frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+    // FRONTEND_URL pode vir como lista separada por vírgula (o CORS em app.js usa
+    // todas as origens). Pra montar link de e-mail só serve uma URL base: pega a
+    // primeira. Sem isso, o link sai com a lista inteira grudada nele.
+    this.frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:8080').split(',')[0].trim();
     // Lembre-se de usar o domínio validado no Resend (ex: 'CliniQ <noreply@cliniqbrasil.com>')
     this.fromEmail = process.env.EMAIL_FROM_ADDRESS || 'noreply@cliniqbrasil.com';
     this.fromName = process.env.EMAIL_FROM_NAME || 'CliniQ Brasil';
