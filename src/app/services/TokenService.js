@@ -29,6 +29,13 @@ class TokenService {
   generateTempToken(payload, expiresIn = '1h') {
     return jwt.sign(payload, this.accessSecret, { expiresIn });
   }
+
+  // Lê o payload SEM validar assinatura/expiração. Use só quando um token
+  // expirado ainda precisa ser inspecionado (ex: extrair o e-mail de um link
+  // de confirmação vencido pra reenviar um novo). Nunca confie nisso pra auth.
+  decode(token) {
+    return jwt.decode(token);
+  }
 }
 
 module.exports = TokenService;

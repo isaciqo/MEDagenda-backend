@@ -1,4 +1,5 @@
 const logger = require('../../lib/logger');
+const { emailConfirmationRequired } = require('../../lib/featureFlags');
 
 const MAX_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000;
@@ -26,7 +27,9 @@ class ValidateLoginService {
       throw err;
     }
 
-    if (!user.isConfirmed) {
+    // Só bloqueia por falta de confirmação se a flag exigir isso. Com a flag
+    // desligada (padrão), contas legadas não confirmadas entram normalmente.
+    if (emailConfirmationRequired() && !user.isConfirmed) {
       logger.warn('login: conta não confirmada', { email });
       const err = new Error('Conta não confirmada. Verifique seu e-mail.');
       err.statusCode = 403;

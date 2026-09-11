@@ -1,11 +1,12 @@
 const logger = require('../../../lib/logger');
 
 class EmailConfirmationOperation {
-  constructor({ userRepository, tokenService, emailService, processReferralOperation }) {
+  constructor({ userRepository, tokenService, emailService, processReferralOperation, resendConfirmationEmailOperation }) {
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.emailService = emailService;
     this.processReferralOperation = processReferralOperation;
+    this.resendConfirmationEmailOperation = resendConfirmationEmailOperation;
   }
 
   async execute(token) {
@@ -13,7 +14,27 @@ class EmailConfirmationOperation {
     try {
       decoded = this.tokenService.verify(token);
     } catch {
-      const err = new Error('Token de confirmação inválido ou expirado');
+      // Token vencido ou adulterado. Se ainda dá pra ler o e-mail de dentro
+      // dele (sem validar), tenta reenviar um link novo respeitando o cooldown
+      // e avisa o usuário na mensagem de erro.
+      const stale = this.tokenService.decode(token);
+      const email = stale && stale.email;
+      const { sent, reason } = email
+        ? await this.resendConfirmationEmailOperation.execute(email)
+        : { sent: false, reason: 'not_found' };
+
+      let message = 'Link de confirmação inválido ou expirado.';
+      if (sent) {
+        message = 'Este link expirou. Enviamos um novo link de confirmação para o seu e-mail.';
+      } else if (reason === 'cooldown') {
+        message = 'Este link expirou. Já enviamos um novo recentemente. Verifique seu e-mail, inclusive a caixa de spam.';
+      } else if (reason === 'already_confirmed') {
+        message = 'Este link expirou, mas seu e-mail já está confirmado. É só fazer login.';
+      } else if (reason === 'not_required') {
+        message = 'Este link expirou, mas a confirmação de e-mail não é mais necessária. É só fazer login normalmente.';
+      }
+
+      const err = new Error(message);
       err.statusCode = 400;
       throw err;
     }

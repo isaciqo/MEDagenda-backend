@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, default: null, sparse: true },
   trialWarningSentAt: { type: Date, default: null },
   planWarningSentAt: { type: Date, default: null },
+  // Quando o último e-mail de confirmação foi enviado (cadastro inicial ou
+  // reenvio). Serve de cooldown: se a pessoa tenta logar ou clica num link de
+  // confirmação expirado, só reenviamos se já passou mais de 24h daqui.
+  lastConfirmationEmailSentAt: { type: Date, default: null },
   onboardingCompleted: { type: Boolean, default: false },
   referralCode: { type: String, default: null, sparse: true },
   referralRewardGrantedAt: { type: Date, default: null },

@@ -131,26 +131,32 @@ class EmailService {
     `;
   }
 
-  async sendConfirmationEmail({ email, name, token }) {
+  async sendConfirmationEmail({ email, name, token, isReminder = false }) {
     const confirmUrl = `${this.frontendUrl}/confirm-email?token=${token}`;
+
+    const intro = isReminder
+      ? 'Sua conta no CliniQ Brasil ainda não foi ativada. O link anterior expirou, então geramos um novo. Clique no botão abaixo pra confirmar seu e-mail:'
+      : 'Falta só um passo pra ativar sua conta no CliniQ Brasil. Clique no botão abaixo pra confirmar seu e-mail:';
 
     return this._send(
       {
         to: email,
-        subject: 'Confirme seu e-mail - CliniQ Brasil',
+        subject: isReminder
+          ? 'Lembrete: confirme seu e-mail - CliniQ Brasil'
+          : 'Confirme seu e-mail - CliniQ Brasil',
         html: this._layout({
-          eyebrow: 'Confirmação de cadastro',
+          eyebrow: isReminder ? 'Lembrete de confirmação' : 'Confirmação de cadastro',
           title: `Olá, ${name}!`,
           bodyHtml: `
             <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
-              Falta só um passo pra ativar sua conta no CliniQ Brasil. Clique no botão abaixo pra confirmar seu e-mail:
+              ${intro}
             </p>
             ${this._ctaButton(confirmUrl, 'Confirmar meu e-mail')}
-            <p style="margin:20px 0 0;font-size:13px;color:#9aa8bf;text-align:center;">Este link expira em 1 hora.</p>
+            <p style="margin:20px 0 0;font-size:13px;color:#9aa8bf;text-align:center;">Este link expira em 24 horas.</p>
           `,
         }),
       },
-      `confirmação para ${email}`
+      `confirmação${isReminder ? ' (lembrete)' : ''} para ${email}`
     );
   }
 
