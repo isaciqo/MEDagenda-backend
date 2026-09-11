@@ -56,7 +56,8 @@ const pixConfigSchema = Joi.object({
 
 module.exports = () => ({
   update: Joi.object({
-    name: Joi.string().optional(),
+    name: Joi.string().trim().min(2).max(80).optional(),
+    displayName: Joi.string().trim().max(80).allow('').optional(),
     specialty: Joi.string().optional().allow(''),
     clinicAddress: Joi.string().optional().allow(''),
     photoUrl: Joi.string().uri().optional().allow('', null),

@@ -25,7 +25,12 @@ const pixConfigSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   user_id: { type: String, required: true, unique: true },
+  // Nome de cadastro (obrigatório) — identifica a conta, não é enviado ao cliente.
   name: { type: String, required: true },
+  // Como o profissional quer ser chamado nas mensagens ao cliente (ex: "Dr. Carlos").
+  // Campo separado de `name` de propósito: mudar um não pode sobrescrever o outro.
+  // '' (vazio) cai no fallback pra `name` em quem nunca configurou isso.
+  displayName: { type: String, default: '' },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },

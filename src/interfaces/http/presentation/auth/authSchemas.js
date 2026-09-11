@@ -14,7 +14,10 @@ module.exports = () => ({
   register: Joi.object({
     email: Joi.string().email().required(),
     password: passwordSchema,
-    name: Joi.string().optional(),
+    name: Joi.string().trim().min(2).max(80).required().messages({
+      'string.empty': 'Informe seu nome completo.',
+      'string.min': 'Informe seu nome completo.',
+    }),
     referralCode: Joi.string().length(8).uppercase().optional(),
     termsAccepted: Joi.boolean().valid(true).required().messages({
       'any.only': 'É necessário aceitar a Política de Privacidade para criar uma conta.',

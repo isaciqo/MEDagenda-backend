@@ -16,6 +16,7 @@ class UpdateSettingsOperation {
 
     const updateData = {};
     if (data.name !== undefined) updateData.name = data.name;
+    if (data.displayName !== undefined) updateData.displayName = data.displayName;
     if (data.specialty !== undefined) updateData.specialty = data.specialty;
     if (data.clinicAddress !== undefined) updateData.clinicAddress = data.clinicAddress;
     if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
@@ -64,6 +65,7 @@ class UpdateSettingsOperation {
 
     return {
       name: updated.name,
+      displayName: updated.displayName || '',
       specialty: updated.specialty,
       clinicAddress: updated.clinicAddress || '',
       photoUrl: updated.photoUrl,

@@ -20,6 +20,8 @@ class GetSettingsOperation {
 
     return {
       name: user.name,
+      // '' quando nunca configurado — o front decide a exibição (cai pro name).
+      displayName: user.displayName || '',
       specialty: user.specialty,
       clinicAddress: user.clinicAddress || '',
       photoUrl: user.photoUrl,
