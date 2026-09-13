@@ -6,7 +6,7 @@ class CreateLocationOperation {
     this.locationRepository = locationRepository;
   }
 
-  async execute({ doctor_id, name, address, color, defaultShiftDurationMinutes }) {
+  async execute({ doctor_id, name, address, color, defaultShiftDurationMinutes, defaultShiftValue }) {
     const existing = await this.locationRepository.findByExactName(doctor_id, name);
     if (existing) {
       logger.warn('location.create: nome já cadastrado', { doctor_id, name });
@@ -22,6 +22,7 @@ class CreateLocationOperation {
       address: address || '',
       color: color || null,
       defaultShiftDurationMinutes: defaultShiftDurationMinutes ?? null,
+      defaultShiftValue: defaultShiftValue ?? null,
     });
 
     logger.info('location.create: local criado', { doctor_id, location_id: location.location_id, name });
@@ -35,6 +36,7 @@ class CreateLocationOperation {
       address: l.address || '',
       color: l.color || null,
       defaultShiftDurationMinutes: l.defaultShiftDurationMinutes ?? null,
+      defaultShiftValue: l.defaultShiftValue ?? null,
     };
   }
 }

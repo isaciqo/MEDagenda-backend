@@ -3,7 +3,7 @@ class UpdateLocationOperation {
     this.locationRepository = locationRepository;
   }
 
-  async execute(location_id, { name, address, color, defaultShiftDurationMinutes }, doctor_id) {
+  async execute(location_id, { name, address, color, defaultShiftDurationMinutes, defaultShiftValue }, doctor_id) {
     const existing = await this.locationRepository.findById(location_id);
     if (!existing) {
       const error = new Error('Local não encontrado');
@@ -30,6 +30,7 @@ class UpdateLocationOperation {
     if (address !== undefined) updateData.address = address;
     if (color !== undefined) updateData.color = color;
     if (defaultShiftDurationMinutes !== undefined) updateData.defaultShiftDurationMinutes = defaultShiftDurationMinutes;
+    if (defaultShiftValue !== undefined) updateData.defaultShiftValue = defaultShiftValue;
 
     const updated = await this.locationRepository.update(location_id, updateData);
 
@@ -39,6 +40,7 @@ class UpdateLocationOperation {
       address: updated.address || '',
       color: updated.color || null,
       defaultShiftDurationMinutes: updated.defaultShiftDurationMinutes ?? null,
+      defaultShiftValue: updated.defaultShiftValue ?? null,
     };
   }
 }

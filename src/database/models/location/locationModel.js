@@ -13,6 +13,10 @@ const locationSchema = new mongoose.Schema({
   // plantão criado apontando pra cá — serve só pra pré-preencher o horário de
   // fim no formulário. Null = nunca criou plantão nesse local.
   defaultShiftDurationMinutes: { type: Number, default: null },
+  // Valor padrão de um plantão nesse local, mesma ideia da duração acima:
+  // reescrito a cada plantão criado apontando pra cá, só pra pré-preencher o
+  // campo de valor no formulário. Null = nunca criou plantão nesse local.
+  defaultShiftValue: { type: Number, default: null },
 }, { timestamps: true });
 
 locationSchema.index({ doctor_id: 1, name: 1 });

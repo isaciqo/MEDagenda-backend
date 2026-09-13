@@ -208,6 +208,45 @@ class EmailService {
     );
   }
 
+  // Cupom de "última chance", separado do aviso genérico acima — ver
+  // TrialDiscountJob (atrás de feature flag + cupom vindo de env var).
+  async sendTrialDiscountOffer({ email, name, daysLeft, discountCode, discountPercent, upgradeUrl }) {
+    return this._send(
+      {
+        to: email,
+        subject: `${discountPercent}% de desconto pra continuar no CliniQ`,
+        html: this._layout({
+          eyebrow: 'Oferta por tempo limitado',
+          title: `Olá, ${name}!`,
+          bodyHtml: `
+            <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
+              Seu período de teste termina em
+              <strong style="color:#16233d;">${daysLeft} dia${daysLeft !== 1 ? 's' : ''}</strong>.
+              Pra você continuar organizando sua agenda sem interrupção, preparamos um desconto de
+              <strong style="color:#16233d;">${discountPercent}%</strong> na sua primeira cobrança.
+            </p>
+
+            <div style="background:#f0fdf4;border:1px dashed #22c55e;border-radius:8px;padding:20px;margin-bottom:24px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.05em;">
+                Use o cupom
+              </p>
+              <p style="margin:0;font-size:24px;font-weight:800;color:#15803d;letter-spacing:0.05em;font-family:monospace;">
+                ${this._escapeHtml(discountCode)}
+              </p>
+            </div>
+
+            <p style="margin:0 0 20px;font-size:13px;color:#9aa8bf;line-height:1.5;">
+              Aplique o código na tela de assinatura, antes de finalizar o pagamento. Válido só pra sua primeira cobrança.
+            </p>
+
+            ${this._ctaButton(upgradeUrl, `Assinar com ${discountPercent}% de desconto`)}
+          `,
+        }),
+      },
+      `oferta de desconto de trial para ${email}`
+    );
+  }
+
   async sendPlanExpiryWarning({ email, name, daysLeft, expiryDate, planName, renewUrl }) {
     return this._send(
       {
@@ -238,6 +277,39 @@ class EmailService {
         }),
       },
       `aviso de plano expirando para ${email}`
+    );
+  }
+
+  // Caso oposto do sendPlanExpiryWarning: aqui a assinatura está ATIVA e vai
+  // cobrar de novo sozinha (ver PlanRenewalReminderJob) — não é um aviso de
+  // perda de acesso, é só transparência sobre a cobrança que vem por aí.
+  async sendPlanRenewalReminder({ email, name, daysLeft, renewalDate, planName, manageUrl }) {
+    return this._send(
+      {
+        to: email,
+        subject: `Sua assinatura ${planName} renova em ${daysLeft} dia${daysLeft !== 1 ? 's' : ''}`,
+        html: this._layout({
+          eyebrow: 'Renovação automática',
+          title: `Olá, ${name}!`,
+          bodyHtml: `
+            <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
+              Sua assinatura do plano <strong style="color:#16233d;">${planName}</strong> está ativa e será
+              renovada automaticamente em
+              <strong style="color:#16233d;">${daysLeft} dia${daysLeft !== 1 ? 's' : ''}</strong>,
+              no dia ${renewalDate}.
+            </p>
+
+            <p style="margin:0 0 20px;font-size:13px;color:#9aa8bf;line-height:1.5;">
+              Não precisa fazer nada — a cobrança será feita automaticamente na mesma forma de pagamento
+              já cadastrada. Se quiser conferir o valor, trocar o cartão ou cancelar antes da renovação,
+              acesse as configurações da sua conta.
+            </p>
+
+            ${this._ctaButton(manageUrl, 'Gerenciar assinatura')}
+          `,
+        }),
+      },
+      `lembrete de renovação automática para ${email}`
     );
   }
 

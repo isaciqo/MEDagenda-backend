@@ -13,4 +13,15 @@ function emailConfirmationRequired() {
   return String(process.env.EMAIL_CONFIRMATION_REQUIRED).toLowerCase() === 'true';
 }
 
-module.exports = { emailConfirmationRequired };
+// E-mail de cupom de desconto perto do fim do trial (ver TrialDiscountJob).
+//
+// DESLIGADA por padrão: só faz sentido ligar depois de existir um cupom de
+// verdade configurado no checkout — o CliniQ só imprime o texto no e-mail,
+// não cria nem valida cupom nenhum sozinho (ver TRIAL_DISCOUNT_CODE).
+//
+// Ligue com TRIAL_DISCOUNT_EMAIL_ENABLED=true.
+function trialDiscountEmailEnabled() {
+  return String(process.env.TRIAL_DISCOUNT_EMAIL_ENABLED).toLowerCase() === 'true';
+}
+
+module.exports = { emailConfirmationRequired, trialDiscountEmailEnabled };

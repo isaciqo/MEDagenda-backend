@@ -36,6 +36,11 @@ class ShiftRepository {
     return Shift.find(filter).sort({ date: 1, time: 1 });
   }
 
+  // Plantão casa por locationId de verdade (não por nome, como a consulta).
+  async findByLocationId(doctor_id, locationId) {
+    return Shift.find({ doctor_id, locationId }).sort({ date: -1, time: -1 });
+  }
+
   async create(data) {
     const shift = new Shift(data);
     return shift.save();

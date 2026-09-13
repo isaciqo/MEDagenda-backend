@@ -7,6 +7,7 @@ module.exports = () => ({
     address: Joi.string().optional().allow(''),
     color: Joi.string().valid(...PLANTAO_COLOR_IDS).optional().allow(null),
     defaultShiftDurationMinutes: Joi.number().integer().min(1).max(30 * 24 * 60).optional().allow(null),
+    defaultShiftValue: Joi.number().min(0).optional().allow(null),
   }),
 
   update: Joi.object({
@@ -14,6 +15,7 @@ module.exports = () => ({
     address: Joi.string().optional().allow(''),
     color: Joi.string().valid(...PLANTAO_COLOR_IDS).optional().allow(null),
     defaultShiftDurationMinutes: Joi.number().integer().min(1).max(30 * 24 * 60).optional().allow(null),
+    defaultShiftValue: Joi.number().min(0).optional().allow(null),
   }),
 
   getById: Joi.object({

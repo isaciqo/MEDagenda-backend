@@ -2,9 +2,10 @@ const { v4: uuidv4 } = require('uuid');
 const logger = require('../../../lib/logger');
 
 class ListLocationsOperation {
-  constructor({ locationRepository, appointmentRepository }) {
+  constructor({ locationRepository, appointmentRepository, userRepository }) {
     this.locationRepository = locationRepository;
     this.appointmentRepository = appointmentRepository;
+    this.userRepository = userRepository;
   }
 
   async execute({ doctor_id, search }) {
@@ -18,9 +19,13 @@ class ListLocationsOperation {
     // Migração única: médico que nunca cadastrou um Location, mas já tem
     // endereços digitados em consultas presenciais antigas (o antigo
     // /settings/locations lia isso direto de Appointment.distinct). Grava de
-    // verdade (não é um cálculo só-de-leitura) pra dar pra editar/apagar depois
-    // — idempotente, só roda quando a lista está genuinamente vazia.
-    if (locations.length === 0) {
+    // verdade (não é um cálculo só-de-leitura) pra dar pra editar/apagar depois.
+    // Precisa checar `locationsMigrated` (flag persistente), não só "a lista
+    // está vazia agora" — senão, apagar todos os Locais depois da primeira
+    // migração faz endereços antigos (às vezes só teste) ressuscitarem sozinhos
+    // a cada vez que a lista zera de novo.
+    const user = await this.userRepository.findById(doctor_id);
+    if (locations.length === 0 && user && !user.locationsMigrated) {
       const legacyNames = await this.appointmentRepository.findDistinctLocations(doctor_id);
       if (legacyNames.length > 0) {
         const docs = legacyNames.map(name => ({
@@ -41,6 +46,10 @@ class ListLocationsOperation {
         }
         locations = await this.locationRepository.findAll(doctor_id);
       }
+      // Marca como migrado mesmo sem endereço legado nenhum — senão essa
+      // checagem roda de novo em toda chamada futura enquanto a lista seguir
+      // vazia.
+      await this.userRepository.update(doctor_id, { locationsMigrated: true });
     }
 
     return locations.map(this._format);
@@ -53,6 +62,7 @@ class ListLocationsOperation {
       address: l.address || '',
       color: l.color || null,
       defaultShiftDurationMinutes: l.defaultShiftDurationMinutes ?? null,
+      defaultShiftValue: l.defaultShiftValue ?? null,
     };
   }
 }

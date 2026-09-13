@@ -104,15 +104,22 @@ class CreateShiftSeriesOperation {
       });
     }
 
-    // Mesma ideia do CreateShiftOperation: a "forma" que o médico preencheu no
-    // exemplo da série vira a duração padrão do local, pra pré-preencher o fim
-    // na próxima. Melhor esforço, não derruba a série se falhar.
+    // Mesma ideia do CreateShiftOperation: a "forma" e o valor que o médico
+    // preencheu no exemplo da série viram o padrão do local, pra pré-preencher
+    // o fim e o valor na próxima. Melhor esforço, não derruba a série se falhar.
     const durationMinutes = toAbsoluteMinutes(endDate, endTime) - toAbsoluteMinutes(date, time);
+    const locationUpdate = {};
     if (durationMinutes > 0 && durationMinutes !== location.defaultShiftDurationMinutes) {
+      locationUpdate.defaultShiftDurationMinutes = durationMinutes;
+    }
+    if (estimatedValue > 0 && estimatedValue !== location.defaultShiftValue) {
+      locationUpdate.defaultShiftValue = estimatedValue;
+    }
+    if (Object.keys(locationUpdate).length > 0) {
       try {
-        await this.locationRepository.update(location.location_id, { defaultShiftDurationMinutes: durationMinutes });
+        await this.locationRepository.update(location.location_id, locationUpdate);
       } catch (err) {
-        logger.warn('shift.series.create: falha ao salvar duração padrão do local', { doctor_id, locationId, error: err.message });
+        logger.warn('shift.series.create: falha ao salvar padrão do local', { doctor_id, locationId, error: err.message });
       }
     }
 

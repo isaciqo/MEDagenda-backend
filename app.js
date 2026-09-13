@@ -195,6 +195,28 @@ connectDatabase()
       }
     }, { timezone: 'America/Sao_Paulo' });
     logger.info('Cron: PlanExpiryWarningJob agendado para 09:15 BRT diariamente');
+
+    cron.schedule('20 9 * * *', async () => {
+      try {
+        const job = container.resolve('planRenewalReminderJob');
+        await job.run();
+      } catch (err) {
+        logger.error('PlanRenewalReminderJob: erro ao executar cron', { message: err.message });
+      }
+    }, { timezone: 'America/Sao_Paulo' });
+    logger.info('Cron: PlanRenewalReminderJob agendado para 09:20 BRT diariamente');
+
+    // Sempre agendado — a flag TRIAL_DISCOUNT_EMAIL_ENABLED é checada dentro do
+    // próprio job, que não faz nenhuma consulta ao banco quando está desligada.
+    cron.schedule('30 9 * * *', async () => {
+      try {
+        const job = container.resolve('trialDiscountJob');
+        await job.run();
+      } catch (err) {
+        logger.error('TrialDiscountJob: erro ao executar cron', { message: err.message });
+      }
+    }, { timezone: 'America/Sao_Paulo' });
+    logger.info('Cron: TrialDiscountJob agendado para 09:30 BRT diariamente');
   })
   .catch((err) => {
     logger.error('Failed to connect to database', { message: err.message, stack: err.stack });

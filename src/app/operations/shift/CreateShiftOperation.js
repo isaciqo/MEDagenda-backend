@@ -35,16 +35,24 @@ class CreateShiftOperation {
       expiresAt: getExpiresAt(),
     });
 
-    // Guarda a duração desse plantão como padrão do local, pra pré-preencher o
-    // horário de fim na próxima vez que o médico escolher esse mesmo local.
-    // Último plantão criado sempre vence. Melhor esforço: se falhar, o plantão
-    // já foi criado, não é motivo pra derrubar a request.
+    // Guarda a duração e o valor desse plantão como padrão do local, pra
+    // pré-preencher o horário de fim e o valor na próxima vez que o médico
+    // escolher esse mesmo local. Último plantão criado sempre vence. Melhor
+    // esforço: se falhar, o plantão já foi criado, não é motivo pra derrubar a
+    // request.
     const durationMinutes = toAbsoluteMinutes(endDate, endTime) - toAbsoluteMinutes(date, time);
+    const locationUpdate = {};
     if (durationMinutes > 0 && durationMinutes !== location.defaultShiftDurationMinutes) {
+      locationUpdate.defaultShiftDurationMinutes = durationMinutes;
+    }
+    if (estimatedValue > 0 && estimatedValue !== location.defaultShiftValue) {
+      locationUpdate.defaultShiftValue = estimatedValue;
+    }
+    if (Object.keys(locationUpdate).length > 0) {
       try {
-        await this.locationRepository.update(location.location_id, { defaultShiftDurationMinutes: durationMinutes });
+        await this.locationRepository.update(location.location_id, locationUpdate);
       } catch (err) {
-        logger.warn('shift.create: falha ao salvar duração padrão do local', { doctor_id, locationId, error: err.message });
+        logger.warn('shift.create: falha ao salvar padrão do local', { doctor_id, locationId, error: err.message });
       }
     }
 

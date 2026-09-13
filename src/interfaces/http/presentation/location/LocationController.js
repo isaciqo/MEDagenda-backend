@@ -1,9 +1,16 @@
 class LocationController {
-  constructor({ createLocationOperation, listLocationsOperation, updateLocationOperation, deleteLocationOperation }) {
+  constructor({
+    createLocationOperation,
+    listLocationsOperation,
+    updateLocationOperation,
+    deleteLocationOperation,
+    getLocationDetailOperation,
+  }) {
     this.createLocationOperation = createLocationOperation;
     this.listLocationsOperation = listLocationsOperation;
     this.updateLocationOperation = updateLocationOperation;
     this.deleteLocationOperation = deleteLocationOperation;
+    this.getLocationDetailOperation = getLocationDetailOperation;
   }
 
   async create(req, res) {
@@ -36,6 +43,11 @@ class LocationController {
       req.params.location_id,
       req.user.user_id,
     );
+    res.status(200).json(result);
+  }
+
+  async detail(req, res) {
+    const result = await this.getLocationDetailOperation.execute(req.params.location_id, req.user.user_id);
     res.status(200).json(result);
   }
 }

@@ -1,5 +1,10 @@
 const Appointment = require('../../../database/models/appointment/appointmentModel');
 
+// Mesmo cuidado de ReDoS já aplicado em PatientRepository/LocationRepository.
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 class AppointmentRepository {
   async findById(appointment_id) {
     return Appointment.findOne({ appointment_id });
@@ -97,6 +102,17 @@ class AppointmentRepository {
       date: { $gte: from, $lte: to },
       status: { $ne: 'cancelado' },
     });
+  }
+
+  // Consulta só guarda `location` como texto solto (o nome do Local no momento
+  // do agendamento, não um id) e só em consulta presencial — ver
+  // CreateAppointmentOperation. Casamento por nome, sem diferenciar maiúsculas.
+  async findByLocationName(doctor_id, name) {
+    return Appointment.find({
+      doctor_id,
+      type: 'presencial',
+      location: { $regex: `^${escapeRegex(name.trim())}$`, $options: 'i' },
+    }).sort({ date: -1, time: -1 });
   }
 
   async findDistinctLocations(doctor_id) {

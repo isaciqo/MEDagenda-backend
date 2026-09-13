@@ -65,6 +65,14 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, default: null, sparse: true },
   trialWarningSentAt: { type: Date, default: null },
   planWarningSentAt: { type: Date, default: null },
+  // Marca o envio do e-mail de cupom de desconto perto do fim do trial (ver
+  // TrialDiscountJob) — separado de trialWarningSentAt pra poder ligar/desligar
+  // e reenviar esse e-mail de oferta sem mexer no aviso genérico de expiração.
+  trialDiscountSentAt: { type: Date, default: null },
+  // Marca o envio do lembrete de renovação automática (ver PlanRenewalReminderJob)
+  // — caso oposto do planWarningSentAt: aqui a assinatura está ATIVA
+  // (stripeSubscriptionId preenchido) e vai cobrar de novo sozinha, não expirar.
+  planRenewalWarningSentAt: { type: Date, default: null },
   // Quando o último e-mail de confirmação foi enviado (cadastro inicial ou
   // reenvio). Serve de cooldown: se a pessoa tenta logar ou clica num link de
   // confirmação expirado, só reenviamos se já passou mais de 24h daqui.
@@ -88,6 +96,12 @@ const userSchema = new mongoose.Schema({
   // também — conta nova nasce em "ambos" (os dois true), e só vira "só
   // plantão" se a pessoa desativar consulta depois, de propósito.
   consultaEnabled: { type: Boolean, default: true },
+  // Marca que a migração única de endereços antigos de consulta pra Location já
+  // rodou pra esse médico (ver ListLocationsOperation). Sem isso, a condição
+  // era "lista de Locations está vazia agora" — o que faz endereços de teste
+  // antigos ressuscitarem sozinhos toda vez que o médico apaga todos os
+  // Locais, não só na primeira vez de verdade.
+  locationsMigrated: { type: Boolean, default: false },
   schedule: {
     type: Map,
     of: scheduleSchema,
@@ -126,7 +140,9 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.index({ plan: 1, trialExpiresAt: 1, trialWarningSentAt: 1, isConfirmed: 1 });
+userSchema.index({ plan: 1, trialExpiresAt: 1, trialDiscountSentAt: 1, isConfirmed: 1 });
 userSchema.index({ plan: 1, planExpiresAt: 1, planWarningSentAt: 1, stripeSubscriptionId: 1 });
+userSchema.index({ plan: 1, planExpiresAt: 1, planRenewalWarningSentAt: 1, stripeSubscriptionId: 1 });
 userSchema.index({ referralCode: 1 }, { sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

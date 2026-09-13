@@ -51,6 +51,20 @@ module.exports = [
     },
   },
   {
+    method: 'get',
+    path: '/locations/:location_id/detail',
+    handler: 'locationController.detail',
+    middlewares: [authMiddleware],
+    validation: { params: locationSchema.getById },
+    swagger: {
+      tags: ['Locations'],
+      summary: 'Location 360 view: summary, appointment/shift history and financial total (gated by plan)',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'location_id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Location detail' }, 404: { description: 'Not found' } },
+    },
+  },
+  {
     method: 'patch',
     path: '/locations/:location_id',
     handler: 'locationController.update',
