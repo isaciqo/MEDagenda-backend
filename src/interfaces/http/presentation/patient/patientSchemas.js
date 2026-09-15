@@ -4,7 +4,7 @@ const phoneSchema = require('../shared/phoneSchema');
 module.exports = () => ({
   create: Joi.object({
     name: Joi.string().required(),
-    phone: phoneSchema({ required: true }),
+    phone: phoneSchema({ required: false, allowEmpty: true }),
   }),
 
   update: Joi.object({

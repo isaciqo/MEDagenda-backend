@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { CANCELLATION_REASON_IDS } = require('../../../../lib/cancellationReasons');
 
 const rescheduleSchema = Joi.object({
   date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
@@ -9,6 +10,11 @@ const reviewSchema = Joi.object({
   patientName: Joi.string().optional().allow('', null),
   rating: Joi.number().integer().min(1).max(5).required(),
   comment: Joi.string().required(),
+});
+
+const cancellationSurveySchema = Joi.object({
+  reasonCategory: Joi.string().valid(...CANCELLATION_REASON_IDS).required(),
+  comment: Joi.string().optional().allow(''),
 });
 
 module.exports = [
@@ -185,6 +191,54 @@ module.exports = [
       responses: {
         201: { description: 'Avaliação enviada' },
         409: { description: 'Feedback já enviado para esta consulta' },
+      },
+    },
+  },
+  {
+    method: 'get',
+    path: '/public/cancellation-survey/:id',
+    handler: 'publicController.cancellationSurveyInfo',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Public'],
+      summary: 'Buscar informações da pesquisa de motivo de cancelamento',
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Dados da pesquisa' },
+        400: { description: 'Link inválido' },
+      },
+    },
+  },
+  {
+    method: 'post',
+    path: '/public/cancellation-survey/:id',
+    handler: 'publicController.submitCancellationSurvey',
+    middlewares: [],
+    validation: { body: cancellationSurveySchema },
+    swagger: {
+      tags: ['Public'],
+      summary: 'Responder a pesquisa de motivo de cancelamento',
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['reasonCategory'],
+              properties: {
+                reasonCategory: { type: 'string', enum: CANCELLATION_REASON_IDS },
+                comment: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: { description: 'Resposta registrada' },
+        400: { description: 'Link inválido' },
+        409: { description: 'Pesquisa já respondida' },
       },
     },
   },

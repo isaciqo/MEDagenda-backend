@@ -7,12 +7,17 @@ class CreatePatientOperation {
   }
 
   async execute({ doctor_id, name, phone }) {
-    const byPhone = await this.patientRepository.findByPhone(doctor_id, phone);
-    if (byPhone) {
-      logger.warn('patient.create: telefone já cadastrado', { doctor_id, phone });
-      const error = new Error('Já existe um cliente com este telefone');
-      error.statusCode = 409;
-      throw error;
+    // Telefone é opcional — só faz sentido checar duplicidade quando um
+    // número de verdade foi informado, senão todo cliente sem telefone
+    // colidiria com o primeiro que também não tem.
+    if (phone) {
+      const byPhone = await this.patientRepository.findByPhone(doctor_id, phone);
+      if (byPhone) {
+        logger.warn('patient.create: telefone já cadastrado', { doctor_id, phone });
+        const error = new Error('Já existe um cliente com este telefone');
+        error.statusCode = 409;
+        throw error;
+      }
     }
 
     const sameNameCount = await this.patientRepository.countByName(doctor_id, name);

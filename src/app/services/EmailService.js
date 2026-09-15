@@ -356,7 +356,11 @@ class EmailService {
     userAgent,
     timestamp,
   }) {
-    const supportEmail = process.env.SUPPORT_EMAIL || this.fromEmail;
+    // Fallback NUNCA pode ser this.fromEmail (noreply@...) — essa caixa não
+    // existe de verdade, então um SUPPORT_EMAIL não configurado no ambiente
+    // (ex: esquecido nas env vars do Render) fazia o chamado sumir em vez de
+    // chegar em algum lugar.
+    const supportEmail = process.env.SUPPORT_EMAIL || 'cliniqbrasil@gmail.com';
 
     return this._send(
       {
@@ -444,7 +448,7 @@ class EmailService {
   }
 
   async sendClinicLeadEmail({ leadId, name, email, clinicName, professionalsCount, message }) {
-    const supportEmail = process.env.SUPPORT_EMAIL || this.fromEmail;
+    const supportEmail = process.env.SUPPORT_EMAIL || 'cliniqbrasil@gmail.com';
     const safeName = this._escapeHtml(name);
     const safeClinic = this._escapeHtml(clinicName || 'Não informado');
     const safeCount = this._escapeHtml(professionalsCount || 'Não informado');
@@ -554,6 +558,35 @@ class EmailService {
         }),
       },
       `confirmação de troca de e-mail para ${email}`
+    );
+  }
+
+  // Disparado pelo webhook de customer.subscription.deleted (ver
+  // SendCancellationSurveyOperation) — não tem CTA de "voltar", é só a
+  // pesquisa de motivo mesmo.
+  async sendCancellationSurveyEmail({ email, name, surveyUrl }) {
+    return this._send(
+      {
+        to: email,
+        subject: 'Sentimos sua falta — pode nos contar o motivo?',
+        html: this._layout({
+          eyebrow: 'Assinatura cancelada',
+          title: `Olá, ${name}!`,
+          bodyHtml: `
+            <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
+              Vimos que sua assinatura do CliniQ Brasil foi cancelada. Antes de tudo, obrigado por ter
+              usado o app.
+            </p>
+            <p style="margin:0 0 20px;font-size:15px;color:#4b5f7e;line-height:1.6;">
+              Se puder, responda 2 perguntas rápidas sobre o motivo do cancelamento. Isso nos ajuda
+              a melhorar o CliniQ pra quem continua usando.
+            </p>
+            ${this._ctaButton(surveyUrl, 'Responder pesquisa rápida')}
+            <p style="margin:20px 0 0;font-size:13px;color:#9aa8bf;text-align:center;">Leva menos de um minuto.</p>
+          `,
+        }),
+      },
+      `pesquisa de cancelamento para ${email}`
     );
   }
 

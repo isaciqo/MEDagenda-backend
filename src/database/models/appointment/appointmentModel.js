@@ -6,7 +6,9 @@ const appointmentSchema = new mongoose.Schema({
   patient: {
     id: { type: String, required: true },
     name: { type: String, required: true },
-    phone: { type: String, required: true },
+    // Opcional — espelha Patient.phone. '' quando o cliente não tem telefone
+    // cadastrado (escolha explícita do médico).
+    phone: { type: String, default: '' },
   },
   type: { type: String, enum: ['presencial', 'online'], required: true },
   date: { type: String, required: true },

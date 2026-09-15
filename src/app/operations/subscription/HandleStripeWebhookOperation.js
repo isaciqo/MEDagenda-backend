@@ -2,9 +2,10 @@ const ProcessedStripeEvent = require('../../../database/models/ProcessedStripeEv
 const logger = require('../../../lib/logger');
 
 class HandleStripeWebhookOperation {
-  constructor({ stripeService, userRepository }) {
+  constructor({ stripeService, userRepository, sendCancellationSurveyOperation }) {
     this.stripeService  = stripeService;
     this.userRepository = userRepository;
+    this.sendCancellationSurveyOperation = sendCancellationSurveyOperation;
   }
 
   async execute(rawBody, signature) {
@@ -104,6 +105,20 @@ class HandleStripeWebhookOperation {
     });
 
     logger.info(`Webhook: customer.subscription.deleted — user ${user.user_id}`);
+
+    // Pesquisa de motivo de cancelamento — melhor esforço, não pode derrubar
+    // o processamento do webhook (que já terminou o que importa acima) se o
+    // e-mail falhar.
+    try {
+      await this.sendCancellationSurveyOperation.execute({
+        doctor_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        plan: user.plan,
+      });
+    } catch (err) {
+      logger.warn('Webhook: falha ao disparar pesquisa de cancelamento', { user_id: user.user_id, error: err.message });
+    }
   }
 }
 
