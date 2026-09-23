@@ -6,7 +6,7 @@ class CreatePatientOperation {
     this.patientRepository = patientRepository;
   }
 
-  async execute({ doctor_id, name, phone }) {
+  async execute({ doctor_id, name, phone, birthDate, guardianName, guardianRelationship }) {
     // Telefone é opcional — só faz sentido checar duplicidade quando um
     // número de verdade foi informado, senão todo cliente sem telefone
     // colidiria com o primeiro que também não tem.
@@ -29,6 +29,9 @@ class CreatePatientOperation {
       name,
       phone,
       displayName,
+      birthDate: birthDate || null,
+      guardianName: guardianName || null,
+      guardianRelationship: guardianRelationship || null,
     });
 
     logger.info('patient.create: paciente criado', { doctor_id, patient_id: patient.patient_id, name });
@@ -41,6 +44,9 @@ class CreatePatientOperation {
       name: p.name,
       displayName: p.displayName,
       phone: p.phone,
+      birthDate: p.birthDate || null,
+      guardianName: p.guardianName || null,
+      guardianRelationship: p.guardianRelationship || null,
     };
   }
 }

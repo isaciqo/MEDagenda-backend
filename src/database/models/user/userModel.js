@@ -81,6 +81,14 @@ const userSchema = new mongoose.Schema({
   referralCode: { type: String, default: null, sparse: true },
   referralRewardGrantedAt: { type: Date, default: null },
   pendingReferralCode: { type: String, default: null },
+  // Código do link público de autocadastro de cliente (ver GetPatientIntakeLinkOperation)
+  // — mesmo padrão do referralCode: gerado sob demanda na primeira vez que o
+  // médico abre a tela, nunca no cadastro da conta. Médico pode gerar um novo
+  // (invalida o antigo) se o link vazar em algum lugar indevido.
+  // Índice sparse é declarado só abaixo (userSchema.index) — não repete aqui
+  // pra não duplicar (mesmo aviso que já existe em referralCode: declarar
+  // sparse:true no path E de novo via .index() cria dois índices iguais).
+  patientIntakeCode: { type: String, default: null },
   followUpMode: { type: String, enum: ['paid_recurrence', 'return', 'free'], default: null },
   allowPatientReschedule: { type: Boolean, default: true },
   // Fixado como "ambos" (true) já na criação da conta — se a pessoa pular o
@@ -144,5 +152,6 @@ userSchema.index({ plan: 1, trialExpiresAt: 1, trialDiscountSentAt: 1, isConfirm
 userSchema.index({ plan: 1, planExpiresAt: 1, planWarningSentAt: 1, stripeSubscriptionId: 1 });
 userSchema.index({ plan: 1, planExpiresAt: 1, planRenewalWarningSentAt: 1, stripeSubscriptionId: 1 });
 userSchema.index({ referralCode: 1 }, { sparse: true });
+userSchema.index({ patientIntakeCode: 1 }, { sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

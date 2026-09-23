@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const { CANCELLATION_REASON_IDS } = require('../../../../lib/cancellationReasons');
+const phoneSchema = require('../shared/phoneSchema');
 
 const rescheduleSchema = Joi.object({
   date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
@@ -15,6 +16,39 @@ const reviewSchema = Joi.object({
 const cancellationSurveySchema = Joi.object({
   reasonCategory: Joi.string().valid(...CANCELLATION_REASON_IDS).required(),
   comment: Joi.string().optional().allow(''),
+});
+
+const patientIntakeSchema = Joi.object({
+  isThirdParty: Joi.boolean().required(),
+  patientName: Joi.string().trim().min(2).max(120).required(),
+  patientBirthDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional().allow(null, ''),
+  // Telefone do paciente só faz sentido quando ele mesmo está se cadastrando —
+  // no fluxo de representante, o contato é o guardianPhone abaixo.
+  patientPhone: Joi.when('isThirdParty', {
+    is: false,
+    then: phoneSchema({ required: false, allowEmpty: true }),
+    otherwise: Joi.forbidden(),
+  }),
+  guardianName: Joi.when('isThirdParty', {
+    is: true,
+    then: Joi.string().trim().min(2).max(120).required(),
+    otherwise: Joi.forbidden(),
+  }),
+  guardianRelationship: Joi.when('isThirdParty', {
+    is: true,
+    then: Joi.string().trim().min(2).max(60).required(),
+    otherwise: Joi.forbidden(),
+  }),
+  // Obrigatório só no fluxo de representante — é o único jeito de contato
+  // possível com esse cliente (ver decisão em conversa com o médico).
+  guardianPhone: Joi.when('isThirdParty', {
+    is: true,
+    then: phoneSchema({ required: true }),
+    otherwise: Joi.forbidden(),
+  }),
+  consentAccepted: Joi.boolean().valid(true).required().messages({
+    'any.only': 'É necessário aceitar os termos para se cadastrar.',
+  }),
 });
 
 module.exports = [
@@ -239,6 +273,59 @@ module.exports = [
         200: { description: 'Resposta registrada' },
         400: { description: 'Link inválido' },
         409: { description: 'Pesquisa já respondida' },
+      },
+    },
+  },
+  {
+    method: 'get',
+    path: '/public/patient-intake/:code',
+    handler: 'publicController.patientIntakeInfo',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Public'],
+      summary: 'Buscar informações do link de autocadastro de cliente',
+      parameters: [{ in: 'path', name: 'code', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Nome do médico dono do link' },
+        400: { description: 'Link inválido' },
+      },
+    },
+  },
+  {
+    method: 'post',
+    path: '/public/patient-intake/:code',
+    handler: 'publicController.submitPatientIntake',
+    middlewares: [],
+    validation: { body: patientIntakeSchema },
+    swagger: {
+      tags: ['Public'],
+      summary: 'Autocadastro de cliente via link público',
+      parameters: [{ in: 'path', name: 'code', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['isThirdParty', 'patientName', 'consentAccepted'],
+              properties: {
+                isThirdParty: { type: 'boolean' },
+                patientName: { type: 'string' },
+                patientBirthDate: { type: 'string', example: '1990-05-20' },
+                patientPhone: { type: 'string' },
+                guardianName: { type: 'string' },
+                guardianRelationship: { type: 'string', example: 'Mãe' },
+                guardianPhone: { type: 'string' },
+                consentAccepted: { type: 'boolean' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        201: { description: 'Cliente cadastrado' },
+        400: { description: 'Link inválido' },
       },
     },
   },

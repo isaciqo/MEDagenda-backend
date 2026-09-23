@@ -3,7 +3,7 @@ class UpdatePatientOperation {
     this.patientRepository = patientRepository;
   }
 
-  async execute(patient_id, { name, phone }, doctor_id) {
+  async execute(patient_id, { name, phone, birthDate, guardianName, guardianRelationship }, doctor_id) {
     const existing = await this.patientRepository.findById(patient_id);
     if (!existing) {
       const error = new Error('Cliente não encontrado');
@@ -27,6 +27,9 @@ class UpdatePatientOperation {
 
     const updateData = {};
     if (phone) updateData.phone = phone;
+    if (birthDate !== undefined) updateData.birthDate = birthDate || null;
+    if (guardianName !== undefined) updateData.guardianName = guardianName || null;
+    if (guardianRelationship !== undefined) updateData.guardianRelationship = guardianRelationship || null;
 
     if (name && name !== existing.name) {
       const sameNameCount = await this.patientRepository.countByName(existing.doctor_id, name);
@@ -41,6 +44,9 @@ class UpdatePatientOperation {
       name: updated.name,
       displayName: updated.displayName,
       phone: updated.phone,
+      birthDate: updated.birthDate || null,
+      guardianName: updated.guardianName || null,
+      guardianRelationship: updated.guardianRelationship || null,
     };
   }
 }

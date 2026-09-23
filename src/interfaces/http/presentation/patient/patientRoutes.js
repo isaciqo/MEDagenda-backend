@@ -105,4 +105,30 @@ module.exports = [
       responses: { 200: { description: 'Patient detail' }, 404: { description: 'Not found' } },
     },
   },
+  {
+    method: 'get',
+    path: '/patients/intake-link',
+    handler: 'patientController.getIntakeLink',
+    middlewares: [authMiddleware],
+    validation: {},
+    swagger: {
+      tags: ['Patients'],
+      summary: 'Get (or lazily create) the doctor\'s public patient self-registration link code',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Link code' } },
+    },
+  },
+  {
+    method: 'post',
+    path: '/patients/intake-link/regenerate',
+    handler: 'patientController.regenerateIntakeLink',
+    middlewares: [authMiddleware],
+    validation: {},
+    swagger: {
+      tags: ['Patients'],
+      summary: 'Regenerate the public patient self-registration link, invalidating the previous one',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'New link code' } },
+    },
+  },
 ];

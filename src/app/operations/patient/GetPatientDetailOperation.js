@@ -62,6 +62,10 @@ class GetPatientDetailOperation {
         displayName: patient.displayName,
         phone: patient.phone,
         createdAt: patient.createdAt,
+        birthDate: patient.birthDate || null,
+        guardianName: patient.guardianName || null,
+        guardianRelationship: patient.guardianRelationship || null,
+        source: patient.source || 'manual',
       },
       summary: {
         appointmentCount: appointments.length,

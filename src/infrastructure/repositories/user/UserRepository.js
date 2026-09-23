@@ -25,6 +25,10 @@ class UserRepository {
     return User.findOne({ referralCode });
   }
 
+  async findByPatientIntakeCode(patientIntakeCode) {
+    return User.findOne({ patientIntakeCode });
+  }
+
   async incrementReferralCount(user_id) {
     return User.findOneAndUpdate({ user_id }, { $inc: { referralCount: 1 } }, { new: true });
   }

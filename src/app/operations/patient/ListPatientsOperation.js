@@ -13,6 +13,8 @@ class ListPatientsOperation {
       name: p.name,
       displayName: p.displayName,
       phone: p.phone,
+      birthDate: p.birthDate || null,
+      source: p.source || 'manual',
     }));
   }
 }

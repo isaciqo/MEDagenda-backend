@@ -7,6 +7,8 @@ class PatientController {
     exportPatientDataOperation,
     getPatientDetailOperation,
     auditService,
+    getPatientIntakeLinkOperation,
+    regeneratePatientIntakeLinkOperation,
   }) {
     this.createPatientOperation = createPatientOperation;
     this.listPatientsOperation = listPatientsOperation;
@@ -15,6 +17,8 @@ class PatientController {
     this.exportPatientDataOperation = exportPatientDataOperation;
     this.getPatientDetailOperation = getPatientDetailOperation;
     this.auditService = auditService;
+    this.getPatientIntakeLinkOperation = getPatientIntakeLinkOperation;
+    this.regeneratePatientIntakeLinkOperation = regeneratePatientIntakeLinkOperation;
   }
 
   async create(req, res) {
@@ -82,6 +86,16 @@ class PatientController {
       resource_id: req.params.patient_id,
       ip_address: req.ip,
     });
+    res.status(200).json(result);
+  }
+
+  async getIntakeLink(req, res) {
+    const result = await this.getPatientIntakeLinkOperation.execute(req.user.user_id);
+    res.status(200).json(result);
+  }
+
+  async regenerateIntakeLink(req, res) {
+    const result = await this.regeneratePatientIntakeLinkOperation.execute(req.user.user_id);
     res.status(200).json(result);
   }
 }

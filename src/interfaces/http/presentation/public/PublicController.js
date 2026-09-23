@@ -10,6 +10,8 @@ class PublicController {
     requestRescheduleByTokenOperation,
     getCancellationSurveyInfoOperation,
     submitCancellationSurveyOperation,
+    getPatientIntakeInfoOperation,
+    submitPatientIntakeOperation,
   }) {
     this.confirmByIdOperation = confirmByIdOperation;
     this.getPublicSlotsOperation = getPublicSlotsOperation;
@@ -21,6 +23,8 @@ class PublicController {
     this.requestRescheduleByTokenOperation = requestRescheduleByTokenOperation;
     this.getCancellationSurveyInfoOperation = getCancellationSurveyInfoOperation;
     this.submitCancellationSurveyOperation = submitCancellationSurveyOperation;
+    this.getPatientIntakeInfoOperation = getPatientIntakeInfoOperation;
+    this.submitPatientIntakeOperation = submitPatientIntakeOperation;
   }
 
   async appointmentInfo(req, res) {
@@ -71,6 +75,16 @@ class PublicController {
   async submitCancellationSurvey(req, res) {
     const result = await this.submitCancellationSurveyOperation.execute(req.params.id, req.body);
     res.status(200).json(result);
+  }
+
+  async patientIntakeInfo(req, res) {
+    const result = await this.getPatientIntakeInfoOperation.execute(req.params.code);
+    res.status(200).json(result);
+  }
+
+  async submitPatientIntake(req, res) {
+    const result = await this.submitPatientIntakeOperation.execute(req.params.code, req.body, req.ip);
+    res.status(201).json(result);
   }
 }
 
