@@ -62,6 +62,10 @@ const userSchema = new mongoose.Schema({
   planExpiresAt: { type: Date, default: null },
   stripeCustomerId: { type: String, default: null },
   stripeSubscriptionId: { type: String, default: null },
+  // true = a assinatura ainda existe na Stripe (stripeSubscriptionId preenchido), mas o
+  // cancelamento já foi agendado pro fim do período: não vai haver nova cobrança e o
+  // acesso termina em planExpiresAt. Mantido pelo webhook customer.subscription.updated.
+  planCancelAtPeriodEnd: { type: Boolean, default: false },
   googleId: { type: String, default: null, sparse: true },
   trialWarningSentAt: { type: Date, default: null },
   planWarningSentAt: { type: Date, default: null },

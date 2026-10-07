@@ -34,7 +34,9 @@ class PlanRenewalReminderJob {
         {
           plan: { $in: ['essencial', 'profissional'] },
           stripeSubscriptionId: { $ne: null },
-          planExpiresAt:             { $gte: now, $lte: deadline },
+          // cancelamento agendado = não vai ser cobrado, quem avisa é o PlanExpiryWarningJob
+          planCancelAtPeriodEnd: { $ne: true },
+          planExpiresAt:            { $gte: now, $lte: deadline },
           planRenewalWarningSentAt: null,
         },
         { $set: { planRenewalWarningSentAt: now } },

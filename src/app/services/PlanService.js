@@ -28,6 +28,15 @@ class PlanService {
     return 'expired';
   }
 
+  // O que acontece em planExpiresAt:
+  //   'auto'     = assinatura ativa, a Stripe cobra de novo sozinha
+  //   'canceled' = cancelamento agendado, sem nova cobrança, acesso termina na data
+  //   'none'     = sem assinatura na Stripe (já encerrada ou plano concedido), acesso termina na data
+  getPlanRenewal(user) {
+    if (!user.stripeSubscriptionId) return 'none';
+    return user.planCancelAtPeriodEnd ? 'canceled' : 'auto';
+  }
+
   // Verifica se pode criar `newCount` consultas (1 ou 2 com retorno)
   canCreateAppointment(user, currentMonthCount, newCount = 1) {
     const effective = this.getEffectivePlan(user);
@@ -75,6 +84,7 @@ class PlanService {
       effectivePlan,
       trialExpiresAt: user.trialExpiresAt ?? null,
       planExpiresAt: user.planExpiresAt ?? null,
+      planRenewal: this.getPlanRenewal(user),
       monthlyAppointmentCount,
       monthlyAppointmentLimit: limit === Infinity ? null : limit,
       features: effectivePlan !== 'expired' ? (PLAN_FEATURES[effectivePlan] ?? []) : [],

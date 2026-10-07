@@ -85,6 +85,7 @@ class HandleStripeWebhookOperation {
       stripeCustomerId:     session.customer,
       stripeSubscriptionId: sub.id,
       ...(periodEnd && { planExpiresAt: periodEnd, planWarningSentAt: null }),
+      planCancelAtPeriodEnd: false,
       trialExpiresAt: null,
     });
 
@@ -129,7 +130,12 @@ class HandleStripeWebhookOperation {
       });
     }
 
-    const updates = {};
+    // Cancelamento agendado: a assinatura segue ativa até o fim do período e só então vira
+    // customer.subscription.deleted. O portal da Stripe usa cancel_at_period_end ou cancel_at
+    // dependendo da versão da API.
+    const cancelScheduled = this._isCancelScheduled(sub);
+
+    const updates = { planCancelAtPeriodEnd: cancelScheduled };
     if (plan)      updates.plan          = plan;
     if (periodEnd) {
       updates.planExpiresAt    = periodEnd;
@@ -138,11 +144,6 @@ class HandleStripeWebhookOperation {
 
     const motivo = this._describeSubscriptionChange(sub, event.data.previous_attributes, user).join('; ');
 
-    if (!Object.keys(updates).length) {
-      logger.warn(`Webhook: customer.subscription.updated (${motivo}) sem plano nem fim de período no payload, nada foi alterado`, context);
-      return;
-    }
-
     await this.userRepository.update(user.user_id, updates);
     logger.info(`Webhook: customer.subscription.updated (${motivo})`, {
       ...context,
@@ -150,6 +151,7 @@ class HandleStripeWebhookOperation {
       expira_em: periodEnd
         ? `${this._formatDate(user.planExpiresAt)} → ${this._formatDate(periodEnd)}`
         : `${this._formatDate(user.planExpiresAt)} (não veio no payload, mantido)`,
+      renovacao: cancelScheduled ? 'cancelada, sem nova cobrança, acesso até expira_em' : 'automática',
       gravado: Object.keys(updates).join(','),
     });
   }
@@ -171,6 +173,7 @@ class HandleStripeWebhookOperation {
 
     await this.userRepository.update(user.user_id, {
       stripeSubscriptionId: null,
+      planCancelAtPeriodEnd: false, // não há mais assinatura pra estar "agendada pra cancelar"
       planExpiresAt: periodEnd,
       planWarningSentAt: null, // cancelamento define um novo prazo final — precisa poder avisar de novo
     });
@@ -224,10 +227,14 @@ class HandleStripeWebhookOperation {
 
     if ('cancel_at_period_end' in prev || 'cancel_at' in prev) {
       changes.push(
-        sub.cancel_at_period_end || sub.cancel_at
+        this._isCancelScheduled(sub)
           ? 'cancelamento agendado pro fim do período'
           : 'cancelamento agendado foi desfeito'
       );
+    } else if ('cancellation_details' in prev) {
+      // A Stripe manda um segundo evento só com o motivo/feedback preenchido no portal
+      const { reason, feedback } = sub.cancellation_details || {};
+      changes.push(`motivo do cancelamento registrado: ${feedback || reason || 'não informado'}`);
     }
 
     if (prev.status && prev.status !== sub.status) {
@@ -249,6 +256,10 @@ class HandleStripeWebhookOperation {
     }
 
     return changes;
+  }
+
+  _isCancelScheduled(sub) {
+    return Boolean(sub.cancel_at_period_end || sub.cancel_at);
   }
 
   _formatDate(date) {

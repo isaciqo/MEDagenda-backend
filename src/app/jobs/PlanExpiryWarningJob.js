@@ -21,7 +21,9 @@ class PlanExpiryWarningJob {
     // findOneAndUpdate atômico, pra múltiplas instâncias não notificarem em duplicidade.
     // stripeSubscriptionId: null é o que garante que só avisamos quem realmente vai
     // perder acesso — enquanto a assinatura tá ativa, a Stripe renova sozinha e
-    // planExpiresAt só marca a próxima cobrança, não uma perda de acesso.
+    // planExpiresAt só marca a próxima cobrança, não uma perda de acesso. A exceção é a
+    // assinatura com cancelamento agendado (planCancelAtPeriodEnd): ainda existe na
+    // Stripe, mas não renova, então também perde acesso na data.
     while (true) {
       const now      = new Date();
       const deadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -29,8 +31,8 @@ class PlanExpiryWarningJob {
       const user = await User.findOneAndUpdate(
         {
           plan: { $in: ['essencial', 'profissional'] },
-          stripeSubscriptionId: null,
-          planExpiresAt:     { $gte: now, $lte: deadline },
+          $or: [{ stripeSubscriptionId: null }, { planCancelAtPeriodEnd: true }],
+          planExpiresAt:    { $gte: now, $lte: deadline },
           planWarningSentAt: null,
         },
         { $set: { planWarningSentAt: now } },
