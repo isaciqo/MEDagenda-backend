@@ -175,6 +175,32 @@ connectDatabase()
       logger.info(`Swagger docs: http://localhost:${PORT}/api-docs`);
     });
 
+    // Keep-alive: PaaS gratuito (Render/Railway) dorme o serviço depois de um tempo
+    // sem receber tráfego HTTP público. Um ping pra localhost não conta pra isso —
+    // precisa bater na URL pública de fora, atravessando o proxy/load balancer, pra
+    // contar como "atividade" de verdade. RENDER_EXTERNAL_URL é injetada automaticamente
+    // pelo Render; SELF_PING_URL é o jeito manual de configurar isso em qualquer outro
+    // provedor. Sem nenhuma das duas (ex: dev local), não faz sentido pingar — fica desligado.
+    const selfPingUrl = process.env.SELF_PING_URL || process.env.RENDER_EXTERNAL_URL;
+    if (selfPingUrl) {
+      let consecutiveFailures = 0;
+      setInterval(() => {
+        fetch(`${selfPingUrl}/health`)
+          .then(() => { consecutiveFailures = 0; })
+          .catch((err) => {
+            consecutiveFailures += 1;
+            // Só loga a partir da 2ª falha seguida — evita barulho por uma única
+            // requisição perdida (rede instável, deploy em andamento, etc).
+            if (consecutiveFailures >= 2) {
+              logger.error('Self-ping: falha ao pingar /health', { message: err.message, consecutiveFailures });
+            }
+          });
+      }, 60_000);
+      logger.info(`Self-ping ativo: ${selfPingUrl}/health a cada 60s`);
+    } else {
+      logger.info('Self-ping desativado — SELF_PING_URL/RENDER_EXTERNAL_URL não configurada');
+    }
+
     // Roda todos os dias às 09:00 horário de Brasília
     cron.schedule('0 9 * * *', async () => {
       try {
