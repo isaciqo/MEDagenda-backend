@@ -1,11 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 
 class GetPublicSlotsOperation {
-  constructor({ appointmentRepository, userRepository, tokenService, scheduleService }) {
+  constructor({ appointmentRepository, userRepository, tokenService, scheduleService, blockedPeriodRepository }) {
     this.appointmentRepository = appointmentRepository;
     this.userRepository = userRepository;
     this.tokenService = tokenService;
     this.scheduleService = scheduleService;
+    this.blockedPeriodRepository = blockedPeriodRepository;
   }
 
   async execute(token) {
@@ -58,6 +59,7 @@ class GetPublicSlotsOperation {
         .filter(a => a.appointment_id !== payload.appointment_id && a.status !== 'cancelado')
         .map(a => `${a.date}-${a.time}`)
     );
+    const blockedPeriods = await this.blockedPeriodRepository.findByDoctorAndDateRange(appointment.doctor_id, fromStr, toStr);
 
     const schedule = doctor.schedule;
     const duration = doctor.defaultDuration || 30;
@@ -72,7 +74,10 @@ class GetPublicSlotsOperation {
         const times = this.scheduleService.generateDaySlots(daySchedule, duration);
 
         times.forEach(time => {
-          if (!bookedSet.has(`${dateStr}-${time}`)) {
+          if (
+            !bookedSet.has(`${dateStr}-${time}`) &&
+            !this.scheduleService.isBlocked(blockedPeriods, dateStr, time, duration)
+          ) {
             slots.push({
               id: uuidv4(),
               date: dateStr,

@@ -51,6 +51,13 @@ const patientIntakeSchema = Joi.object({
   }),
 });
 
+const publicBookingRequestSchema = Joi.object({
+  patientName: Joi.string().trim().min(2).max(120).required(),
+  patientPhone: phoneSchema({ required: false, allowEmpty: true }),
+  date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
+  time: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
+});
+
 module.exports = [
   {
     method: 'get',
@@ -326,6 +333,72 @@ module.exports = [
       responses: {
         201: { description: 'Cliente cadastrado' },
         400: { description: 'Link inválido' },
+      },
+    },
+  },
+  {
+    method: 'get',
+    path: '/public/booking/:code',
+    handler: 'publicController.bookingInfo',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Public'],
+      summary: 'Buscar informações da página pública de agendamento (nome do médico, duração)',
+      parameters: [{ in: 'path', name: 'code', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Dados da página de agendamento' },
+        400: { description: 'Link inválido ou agendamento público desativado' },
+      },
+    },
+  },
+  {
+    method: 'get',
+    path: '/public/booking/:code/slots',
+    handler: 'publicController.bookingSlots',
+    middlewares: [],
+    validation: {},
+    swagger: {
+      tags: ['Public'],
+      summary: 'Buscar horários disponíveis na página pública de agendamento',
+      parameters: [{ in: 'path', name: 'code', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Horários disponíveis' },
+        400: { description: 'Link inválido ou agendamento público desativado' },
+      },
+    },
+  },
+  {
+    method: 'post',
+    path: '/public/booking/:code',
+    handler: 'publicController.requestBooking',
+    middlewares: [],
+    validation: { body: publicBookingRequestSchema },
+    swagger: {
+      tags: ['Public'],
+      summary: 'Solicitar um novo agendamento pela página pública (cria consulta agendada ou aguardando confirmação)',
+      parameters: [{ in: 'path', name: 'code', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['patientName', 'date', 'time'],
+              properties: {
+                patientName: { type: 'string', example: 'Maria Souza' },
+                patientPhone: { type: 'string', example: '11999999999' },
+                date: { type: 'string', example: '2025-08-20' },
+                time: { type: 'string', example: '10:00' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        201: { description: 'Pedido de agendamento criado' },
+        400: { description: 'Link inválido, desativado, ou horário fora do expediente' },
+        409: { description: 'Horário já ocupado ou bloqueado' },
       },
     },
   },

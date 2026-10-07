@@ -13,7 +13,7 @@ const PLAN_FEATURES = {
 
 class PlanService {
   // Retorna o plano "efetivo": considera expiração
-  getEffectivePlan(user) {
+   getEffectivePlan(user) {
     const { plan, trialExpiresAt, planExpiresAt } = user;
     const now = Date.now();
 

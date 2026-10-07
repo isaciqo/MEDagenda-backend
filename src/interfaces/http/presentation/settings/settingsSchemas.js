@@ -70,6 +70,9 @@ module.exports = () => ({
     defaultDuration: Joi.number().integer().min(5).max(240).optional(),
     defaultConsultationValue: Joi.number().min(0).optional(),
     allowPatientReschedule: Joi.boolean().optional(),
+    publicBookingEnabled: Joi.boolean().optional(),
+    publicBookingDuration: Joi.number().integer().min(5).max(240).optional().allow(null),
+    publicBookingAutoAccept: Joi.boolean().optional(),
     schedule: Joi.object({
       segunda: daySchema,
       terca: daySchema,

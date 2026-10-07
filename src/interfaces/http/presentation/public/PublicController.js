@@ -12,6 +12,9 @@ class PublicController {
     submitCancellationSurveyOperation,
     getPatientIntakeInfoOperation,
     submitPatientIntakeOperation,
+    getPublicBookingInfoOperation,
+    getPublicBookingSlotsOperation,
+    requestPublicBookingOperation,
   }) {
     this.confirmByIdOperation = confirmByIdOperation;
     this.getPublicSlotsOperation = getPublicSlotsOperation;
@@ -25,6 +28,9 @@ class PublicController {
     this.submitCancellationSurveyOperation = submitCancellationSurveyOperation;
     this.getPatientIntakeInfoOperation = getPatientIntakeInfoOperation;
     this.submitPatientIntakeOperation = submitPatientIntakeOperation;
+    this.getPublicBookingInfoOperation = getPublicBookingInfoOperation;
+    this.getPublicBookingSlotsOperation = getPublicBookingSlotsOperation;
+    this.requestPublicBookingOperation = requestPublicBookingOperation;
   }
 
   async appointmentInfo(req, res) {
@@ -84,6 +90,21 @@ class PublicController {
 
   async submitPatientIntake(req, res) {
     const result = await this.submitPatientIntakeOperation.execute(req.params.code, req.body, req.ip);
+    res.status(201).json(result);
+  }
+
+  async bookingInfo(req, res) {
+    const result = await this.getPublicBookingInfoOperation.execute(req.params.code);
+    res.status(200).json(result);
+  }
+
+  async bookingSlots(req, res) {
+    const result = await this.getPublicBookingSlotsOperation.execute(req.params.code);
+    res.status(200).json(result);
+  }
+
+  async requestBooking(req, res) {
+    const result = await this.requestPublicBookingOperation.execute(req.params.code, req.body);
     res.status(201).json(result);
   }
 }

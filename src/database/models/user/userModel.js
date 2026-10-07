@@ -91,6 +91,20 @@ const userSchema = new mongoose.Schema({
   patientIntakeCode: { type: String, default: null },
   followUpMode: { type: String, enum: ['paid_recurrence', 'return', 'free'], default: null },
   allowPatientReschedule: { type: Boolean, default: true },
+  // Página pública de agendamento (link fixo, compartilhável com qualquer pessoa,
+  // diferente do link de remarcação que é por consulta). Desligado por padrão —
+  // só existe pra quem ativa conscientemente em Configurações.
+  publicBookingEnabled: { type: Boolean, default: false },
+  // null = usa defaultDuration (mesmo padrão de "sem valor próprio, cai no
+  // padrão do médico" já usado em outros lugares do agendamento).
+  publicBookingDuration: { type: Number, default: null },
+  // false = todo pedido feito pela página pública nasce com status
+  // 'aguardando_confirmacao' e precisa ser aceito manualmente (ver
+  // AcceptBookingRequestOperation). true = já nasce 'agendado'.
+  publicBookingAutoAccept: { type: Boolean, default: false },
+  // Mesmo padrão do patientIntakeCode: gerado sob demanda na primeira vez que o
+  // médico abre a tela, regenerável (invalida o link antigo).
+  publicBookingCode: { type: String, default: null },
   // Fixado como "ambos" (true) já na criação da conta — se a pessoa pular o
   // onboarding inteiro, continua com acesso a tudo, sem precisar ativar nada
   // depois. Controla se a aba de Plantão aparece na Agenda, se a cor aparece
@@ -153,5 +167,6 @@ userSchema.index({ plan: 1, planExpiresAt: 1, planWarningSentAt: 1, stripeSubscr
 userSchema.index({ plan: 1, planExpiresAt: 1, planRenewalWarningSentAt: 1, stripeSubscriptionId: 1 });
 userSchema.index({ referralCode: 1 }, { sparse: true });
 userSchema.index({ patientIntakeCode: 1 }, { sparse: true });
+userSchema.index({ publicBookingCode: 1 }, { sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

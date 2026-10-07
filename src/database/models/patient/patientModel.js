@@ -23,9 +23,11 @@ const patientSchema = new mongoose.Schema({
   // esse formulário, então não tem esse consentimento pra registrar).
   consentAcceptedAt: { type: Date, default: null },
   // 'manual' = médico cadastrou (via Agenda ou tela de Clientes). 'self_registration'
-  // = veio do link público de autocadastro — usado só pra mostrar uma
-  // etiqueta discreta na lista de Clientes, não muda nenhum comportamento.
-  source: { type: String, enum: ['manual', 'self_registration'], default: 'manual' },
+  // = veio do link público de autocadastro. 'public_booking' = veio de um
+  // pedido pela página pública de agendamento (ver RequestPublicBookingOperation).
+  // Usado só pra mostrar uma etiqueta discreta na lista de Clientes, não muda
+  // nenhum comportamento.
+  source: { type: String, enum: ['manual', 'self_registration', 'public_booking'], default: 'manual' },
 }, { timestamps: true });
 
 patientSchema.index({ doctor_id: 1, name: 1 });

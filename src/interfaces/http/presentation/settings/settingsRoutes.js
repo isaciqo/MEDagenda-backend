@@ -35,6 +35,32 @@ module.exports = [
     },
   },
   {
+    method: 'get',
+    path: '/settings/booking-link',
+    handler: 'settingsController.getBookingLink',
+    middlewares: [authMiddleware],
+    validation: {},
+    swagger: {
+      tags: ['Settings'],
+      summary: 'Get (or lazily create) the doctor\'s public booking page link code',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'Link code' } },
+    },
+  },
+  {
+    method: 'post',
+    path: '/settings/booking-link/regenerate',
+    handler: 'settingsController.regenerateBookingLink',
+    middlewares: [authMiddleware],
+    validation: {},
+    swagger: {
+      tags: ['Settings'],
+      summary: 'Regenerate the public booking page link, invalidating the previous one',
+      security: [{ BearerAuth: [] }],
+      responses: { 200: { description: 'New link code' } },
+    },
+  },
+  {
     method: 'put',
     path: '/settings',
     handler: 'settingsController.update',

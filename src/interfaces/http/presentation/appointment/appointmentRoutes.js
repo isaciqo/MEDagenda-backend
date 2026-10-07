@@ -250,4 +250,32 @@ module.exports = [
       responses: { 200: { description: 'Reschedule declined' } },
     },
   },
+  {
+    method: 'post',
+    path: '/appointments/:id/booking-request/accept',
+    handler: 'appointmentController.acceptBookingRequest',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.getById },
+    swagger: {
+      tags: ['Appointments'],
+      summary: 'Accept a pending appointment request created via the public booking page',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Booking request accepted' } },
+    },
+  },
+  {
+    method: 'post',
+    path: '/appointments/:id/booking-request/decline',
+    handler: 'appointmentController.declineBookingRequest',
+    middlewares: [authMiddleware],
+    validation: { params: appointmentSchema.getById },
+    swagger: {
+      tags: ['Appointments'],
+      summary: 'Decline (cancel) a pending appointment request created via the public booking page',
+      security: [{ BearerAuth: [] }],
+      parameters: [{ in: 'path', name: 'id', required: true, schema: { type: 'string' } }],
+      responses: { 200: { description: 'Booking request declined' } },
+    },
+  },
 ];

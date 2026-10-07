@@ -29,6 +29,9 @@ class UpdateSettingsOperation {
     if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
     if (data.defaultConsultationValue !== undefined) updateData.defaultConsultationValue = data.defaultConsultationValue;
     if (data.allowPatientReschedule !== undefined) updateData.allowPatientReschedule = data.allowPatientReschedule;
+    if (data.publicBookingEnabled !== undefined) updateData.publicBookingEnabled = data.publicBookingEnabled;
+    if (data.publicBookingDuration !== undefined) updateData.publicBookingDuration = data.publicBookingDuration;
+    if (data.publicBookingAutoAccept !== undefined) updateData.publicBookingAutoAccept = data.publicBookingAutoAccept;
     if (data.schedule !== undefined) updateData.schedule = data.schedule;
     // Lista inteira, o médico controla os itens (adicionar/renomear/remover) —
     // diferente do Map de chave fixa antigo, aqui não precisa de merge com
@@ -78,6 +81,9 @@ class UpdateSettingsOperation {
       defaultDuration: updated.defaultDuration,
       defaultConsultationValue: updated.defaultConsultationValue ?? 0,
       allowPatientReschedule: updated.allowPatientReschedule ?? true,
+      publicBookingEnabled: updated.publicBookingEnabled ?? false,
+      publicBookingDuration: updated.publicBookingDuration ?? null,
+      publicBookingAutoAccept: updated.publicBookingAutoAccept ?? false,
       schedule,
       paymentMethods: resolvePaymentMethods(updated),
       pix: resolvePixConfig(updated),

@@ -1,8 +1,9 @@
 class RequestRescheduleByTokenOperation {
-  constructor({ appointmentRepository, userRepository, scheduleService }) {
+  constructor({ appointmentRepository, userRepository, scheduleService, blockedPeriodRepository }) {
     this.appointmentRepository = appointmentRepository;
     this.userRepository = userRepository;
     this.scheduleService = scheduleService;
+    this.blockedPeriodRepository = blockedPeriodRepository;
   }
 
   async execute(token, { date, time }) {
@@ -55,6 +56,13 @@ class RequestRescheduleByTokenOperation {
     const duration = doctor?.defaultDuration || 30;
     if (this.scheduleService.hasOverlap(others, date, time, duration)) {
       const error = new Error('Esse horário já está ocupado. Escolha outro.');
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const dayBlocks = await this.blockedPeriodRepository.findByDoctorAndDateRange(appointment.doctor_id, date, date);
+    if (this.scheduleService.isBlocked(dayBlocks, date, time, duration)) {
+      const error = new Error('Esse horário não está disponível. Escolha outro.');
       error.statusCode = 409;
       throw error;
     }

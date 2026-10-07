@@ -91,6 +91,27 @@ class ScheduleService {
     });
   }
 
+  /**
+   * Bloqueio pontual (ver BlockedPeriod) — separado do expediente semanal
+   * recorrente. `durationMinutes` faz a checagem por sobreposição de intervalo,
+   * igual hasOverlap, não só o horário exato: um bloqueio das 14h-16h também
+   * precisa barrar um slot que começa 15h30 com 1h de duração.
+   */
+  isBlocked(blockedPeriods, date, time, durationMinutes = 0) {
+    const dayBlocks = (blockedPeriods || []).filter(b => b.date === date);
+    if (dayBlocks.length === 0) return false;
+
+    const slotStart = this._parseTime(time);
+    const slotEnd = slotStart + durationMinutes;
+
+    return dayBlocks.some(b => {
+      if (b.allDay) return true;
+      const blockStart = this._parseTime(b.startTime);
+      const blockEnd = this._parseTime(b.endTime);
+      return slotStart < blockEnd && slotEnd > blockStart;
+    });
+  }
+
   _parseTime(t) {
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;

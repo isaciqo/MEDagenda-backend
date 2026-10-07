@@ -15,6 +15,8 @@ class AppointmentController {
     updateAppointmentSeriesOperation,
     acceptRescheduleRequestOperation,
     declineRescheduleRequestOperation,
+    acceptBookingRequestOperation,
+    declineBookingRequestOperation,
     auditService,
   }) {
     this.createAppointmentOperation = createAppointmentOperation;
@@ -32,6 +34,8 @@ class AppointmentController {
     this.updateAppointmentSeriesOperation = updateAppointmentSeriesOperation;
     this.acceptRescheduleRequestOperation = acceptRescheduleRequestOperation;
     this.declineRescheduleRequestOperation = declineRescheduleRequestOperation;
+    this.acceptBookingRequestOperation = acceptBookingRequestOperation;
+    this.declineBookingRequestOperation = declineBookingRequestOperation;
     this.auditService = auditService;
   }
 
@@ -149,6 +153,16 @@ class AppointmentController {
 
   async declineRescheduleRequest(req, res) {
     const result = await this.declineRescheduleRequestOperation.execute(req.params.id, req.user.user_id);
+    res.status(200).json(result);
+  }
+
+  async acceptBookingRequest(req, res) {
+    const result = await this.acceptBookingRequestOperation.execute(req.params.id, req.user.user_id);
+    res.status(200).json(result);
+  }
+
+  async declineBookingRequest(req, res) {
+    const result = await this.declineBookingRequestOperation.execute(req.params.id, req.user.user_id);
     res.status(200).json(result);
   }
 }
