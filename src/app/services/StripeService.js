@@ -70,6 +70,14 @@ class StripeService {
     return this.stripe.webhooks.constructEvent(rawBody, signature, this.webhookSecret);
   }
 
+  // Fim do período pago de uma assinatura. A partir da API 2025-03-31 a Stripe moveu
+  // current_period_end da raiz da assinatura pros itens, e o payload do webhook segue a
+  // versão do endpoint/conta (não o apiVersion deste client), então lê dos dois lugares.
+  getPeriodEnd(sub) {
+    const ts = sub?.current_period_end ?? sub?.items?.data?.[0]?.current_period_end;
+    return ts ? new Date(ts * 1000) : null;
+  }
+
   getPriceId(plan, billingCycle) {
     return this.priceIds[plan]?.[billingCycle] ?? null;
   }

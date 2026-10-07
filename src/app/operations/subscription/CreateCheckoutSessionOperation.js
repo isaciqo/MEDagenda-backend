@@ -41,16 +41,19 @@ class CreateCheckoutSessionOperation {
             }
           );
 
-          const periodEnd = updated.current_period_end
-            ? new Date(updated.current_period_end * 1000)
-            : null;
+          const periodEnd = this.stripeService.getPeriodEnd(updated);
 
           await this.userRepository.update(user_id, {
             plan,
             ...(periodEnd && { planExpiresAt: periodEnd }),
           });
 
-          logger.info(`subscription.upgrade: user ${user_id} → plano ${plan}`);
+          logger.info(`subscription.upgrade: troca de plano ${user.plan} → ${plan} direto na assinatura existente`, {
+            user_id,
+            email: user.email,
+            subscription_id: user.stripeSubscriptionId,
+            expira_em: periodEnd ? periodEnd.toISOString() : 'não informado pela Stripe',
+          });
           const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
           return { url: `${frontendUrl}/assinatura/sucesso`, upgraded: true };
         }
