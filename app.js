@@ -13,6 +13,25 @@ const requestContextMiddleware = require('./src/interfaces/http/middlewares/requ
 const setupSwagger = require('./src/interfaces/http/presentation/swagger');
 const logger = require('./src/lib/logger');
 
+// Rede de segurança contra o processo inteiro cair sem log nenhum — qualquer
+// exceção ou promise rejeitada que escape do error handler de rota (ex: um
+// cron job, um EventEmitter de alguma lib sem listener de 'error', uma
+// promise solta) hoje derruba o Node direto com o stack cru no stdout, sem
+// nenhum registro estruturado. Loga com o máximo de contexto possível e sai
+// de propósito: depois de uma exceção não tratada o estado do processo não é
+// confiável, então é mais seguro deixar o Render reiniciar (restart automático)
+// do que continuar servindo requisições num estado desconhecido.
+process.on('uncaughtException', (err) => {
+  logger.error('Processo encerrando: uncaughtException', { error: err.message, stack: err.stack });
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  logger.error('Processo encerrando: unhandledRejection', { error: err.message, stack: err.stack });
+  process.exit(1);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
